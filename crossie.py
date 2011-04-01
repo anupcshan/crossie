@@ -38,23 +38,44 @@ for i in range(0, dimx):
 #	print s
 
 arr = {}
+across = {}
+down = {}
+startlist = {}
 for i in range(0, length):
 	arr[i] = {}
+	across[i] = {}
+	down[i] = {}
 
 for i in range(0, length):
 	for j in range(0, length):
 		x = boxx * (i + 0.5)
 		y = boxy * (j + 0.5)
 #		print j, i, im.getpixel((x, y))
-		arr[j][i] = (im.getpixel((x, y)) == (255, 255, 255))
+		if (im.getpixel((x, y)) == (255, 255, 255)):
+			arr[j][i] = 1
+		else:
+			arr[j][i] = 0
 #		im.putpixel((x, y), (255, 0, 0))
 	
 for i in range(0, length):
 	for j in range(0, length):
-		if arr[i][j] == True:
+		down[i][j] = across[i][j] = 0
+		if arr[i][j] == 1:
+			down[i][j] = across[i][j] = 1
 			print "1",
+			if i > 0:
+				down[i][j] = down[i-1][j] + 1
+				if down[i][j] == 2:
+					startlist[(i-1, j)] = 1
+			if j > 0:
+				across[i][j] = across[i][j-1] + 1
+				if across[i][j] == 2:
+					startlist[(i, j-1)] = 1
 		else:
 			print "0",
 	print ""
 
+starts = startlist.keys()
+starts.sort()
+print "Start positions :", starts
 #im.save("copy.jpg")
