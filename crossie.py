@@ -56,7 +56,7 @@ for i in range(0, length):
 		else:
 			arr[j][i] = 0
 #		im.putpixel((x, y), (255, 0, 0))
-	
+
 for i in range(0, length):
 	for j in range(0, length):
 		down[i][j] = across[i][j] = 0
@@ -66,16 +66,25 @@ for i in range(0, length):
 			if i > 0:
 				down[i][j] = down[i-1][j] + 1
 				if down[i][j] == 2:
-					startlist[(i-1, j)] = 1
+					if startlist.get((i-1, j)):
+						startlist[(i-1, j)] += 1
+					else:
+						startlist[(i-1, j)] = 1
 			if j > 0:
 				across[i][j] = across[i][j-1] + 1
 				if across[i][j] == 2:
-					startlist[(i, j-1)] = 1
+					if startlist.get((i, j-1)):
+						startlist[(i, j-1)] += 2
+					else:
+						startlist[(i, j-1)] = 2
 		else:
 			print "0",
 	print ""
 
 starts = startlist.keys()
 starts.sort()
-print "Start positions :", starts
+print "Start positions :"
+
+for startpos in starts:
+	print startpos, startlist[startpos]
 #im.save("copy.jpg")
