@@ -57,8 +57,14 @@ for i in range(0, length):
 			arr[j][i] = 0
 #		im.putpixel((x, y), (255, 0, 0))
 
+print "matrix = [",
 for i in range(0, length):
+	if i >= 1:
+		print ","
+	print "[",
 	for j in range(0, length):
+		if j >= 1:
+			print ",",
 		down[i][j] = across[i][j] = 0
 		if arr[i][j] == 1:
 			down[i][j] = across[i][j] = 1
@@ -79,12 +85,18 @@ for i in range(0, length):
 						startlist[(i, j-1)] = 2
 		else:
 			print "0",
-	print ""
+	print "]",
+print "];"
 
 starts = startlist.keys()
 starts.sort()
-print "Start positions :"
+print "startpos = [",
 
+i = 0
 for startpos in starts:
-	print startpos, startlist[startpos]
+	if i > 0:
+		print ",",
+	print "[", startpos[0], ",", startpos[1], ",", startlist[startpos], "]",
+	i = i + 1
+print "];"
 #im.save("copy.jpg")
