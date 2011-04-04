@@ -116,9 +116,13 @@ page = urllib2.urlopen(pageurl).read().split('\r\n')
 across = {}
 down = {}
 prevcnum = 0
+crossienum = None
 isacross = True
 
 for line in page:
+	if crossienum == None:
+		if re.match('The Hindu Crossword [0-9][0-9]*', line):
+			crossienum = re.search('The Hindu Crossword ([0-9][0-9]*)', line).groups()[0]
 	if re.match('<p>\s*[0-9][0-9]*', line):
 		cnum, clue, chars = re.search('<p>\s*([0-9][0-9]*)\ (.*) (\([0-9,-]*\))', line).groups()
 		cnum = int(cnum)
@@ -132,6 +136,7 @@ for line in page:
 		else:
 			down[cnum] = {'clue': clue, 'chars': chars}
 
+print "crossienum =", crossienum, ";"
 print "across = {"
 i = 0
 for clue in across:
