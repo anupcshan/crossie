@@ -9,6 +9,7 @@ function runCrossie() {
 
 	loadLocalStorageValues();
 	showTable();
+	showClues();
 }
 
 function testLocalStorage() {
@@ -36,11 +37,11 @@ function testLocalStorage() {
 }
 
 function showTable() {
-	var mainDiv = $('#main');
+	var tables = $('#tables');
 	var length = 15, i, j, startposnum = 0;
 
 	var tbl = $('<table>');
-	$(mainDiv).append(tbl);
+	$(tables).append(tbl);
 	$(tbl).attr('border', 1);
 	for (i = 0; i < 15; i ++) {
 		var trow = $('<tr>');
@@ -84,12 +85,36 @@ function showTable() {
 	$('.characterinput').blur(handleBlur);
 }
 
+function showClues() {
+	var clues = $('#clues');
+
+	var acrossDiv = $('<div>');
+	$(acrossDiv).addClass('acrossdownclues');
+	$(clues).append(acrossDiv);
+	$(acrossDiv).append('<h3>Across</h3>');
+	for (var i in across) {
+		var clue = $('<div>');
+		$(clue).html(i + ") " + across[i].clue + " " + across[i].chars);
+		$(acrossDiv).append(clue);
+	}
+
+	var downDiv = $('<div>');
+	$(downDiv).addClass('acrossdownclues');
+	$(clues).append(downDiv);
+	$(downDiv).append('<h3>Down</h3>');
+	for (var i in down) {
+		var clue = $('<div>');
+		$(clue).html(i + ") " + down[i].clue + " " + down[i].chars);
+		$(downDiv).append(clue);
+	}
+}
+
 function loadLocalStorageValues() {
-	characters = JSON.parse(localStorage.getItem('characters')) || {};
+	characters = JSON.parse(localStorage.getItem(crossienum)) || {};
 }
 
 function saveLocalStorageValues() {
-	localStorage.setItem('characters', JSON.stringify(characters));
+	localStorage.setItem(crossienum, JSON.stringify(characters));
 }
 
 function handleClick() {

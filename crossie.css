@@ -38,3 +38,28 @@ table {
 	top: -1px;
 	left: -1px;
 }
+
+.tablediv {
+	float: left;
+	height: 97%;
+	width: 420px;
+	margin-left: -100%;
+	padding-top: 20px;
+}
+.cluesdiv {
+	float: left;
+	height: 100%;
+	width: 100%;
+}
+
+.cluesinner {
+	margin-left: 430px;
+	height: 100%;
+}
+
+.acrossdownclues {
+	width: 49%;
+	padding-right: 10px;
+	height: 100%;
+	float: left;
+}
