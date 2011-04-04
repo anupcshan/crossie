@@ -110,8 +110,12 @@ function showClues() {
 		$(downDiv).append(clue);
 	}
 
-	$(acrossDiv).click(function() {dirn = 'across'});
-	$(downDiv).click(function() {dirn = 'down'});
+	$(acrossDiv).click(function() {dirn = 'across'; $(acrossDiv).css('background-color', 'yellow'); $(downDiv).css('background-color', 'white');});
+	$(downDiv).click(function() {dirn = 'down'; $(downDiv).css('background-color', 'yellow'); $(acrossDiv).css('background-color', 'white');});
+
+	dirn = 'across';
+	$(acrossDiv).css('background-color', 'yellow');
+	$(downDiv).css('background-color', 'white');
 }
 
 function loadLocalStorageValues() {

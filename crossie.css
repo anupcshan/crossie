@@ -59,7 +59,7 @@ table {
 
 .acrossdownclues {
 	width: 49%;
-	padding-right: 10px;
-	height: 100%;
 	float: left;
+	padding: 5px;
+	padding-bottom: 10px;
 }
