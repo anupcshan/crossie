@@ -1,0 +1,29 @@
+td {
+	width: 25px;
+	height: 25px;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+.blacked-out {
+	background-color: black;
+}
+
+.not-blacked-out {
+	position: relative;
+}
+
+.cluenum {
+	font-size: 10px;
+	position: absolute;;
+	left: 0px;
+	top: -12px;
+}
+
+.cluecharacter {
+	position: absolute;
+	left: 8px;
+	top: -8px;
+}
