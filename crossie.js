@@ -1,4 +1,5 @@
 characters = {};
+currentcell = null;
 
 function runCrossie() {
 	if (! testLocalStorage()) {
@@ -54,6 +55,7 @@ function showTable() {
 					characters[[i,j]] = '';
 				var tcelldiv = $('<div>');
 				$(tcelldiv).addClass('not-blacked-out');
+				$(tcelldiv).data([i, j]);
 				$(tcell).append(tcelldiv);
 				var nxtstartpos = startpos[startposnum];
 				if (nxtstartpos && nxtstartpos[0] == i && nxtstartpos[1] == j) {
@@ -67,12 +69,18 @@ function showTable() {
 				$(character).text(characters[[i,j]]);
 				$(character).addClass('cluecharacter');
 				$(tcelldiv).append(character);
+				var textbox = $('<input>');
+				$(textbox).attr('maxlength', 1);
+				$(textbox).addClass('characterinput');
+				$(textbox).hide();
+				$(tcelldiv).append(textbox);
 			}
 		}
 	}
 
 	saveLocalStorageValues();
 	$('.not-blacked-out').click(handleClick);
+	$('.characterinput').blur(handleBlur);
 }
 
 function loadLocalStorageValues() {
@@ -85,4 +93,25 @@ function saveLocalStorageValues() {
 
 function handleClick() {
 	// Handle click on a white square.
+	var chldrn = $(this).children();
+	var txtbox = chldrn[chldrn.length - 1];
+	var celldata = $(this).data();
+	var arr = [celldata[0], celldata[1]];
+	$(txtbox).val(characters[arr]);
+	$(txtbox).show();
+	$(txtbox).focus();
+	currentcell = txtbox;
+}
+
+function handleBlur() {
+	// When text input box loses focus.
+	var parnt = $(this).parent();
+	var celldata = $(parnt).data();
+	var arr = [celldata[0], celldata[1]];
+	characters[arr] = $(this).val();
+	$(this).hide();
+	var chldrn = $(parnt).children();
+	var txtnode = chldrn[chldrn.length - 2];
+	$(txtnode).text(characters[arr]);
+	saveLocalStorageValues();
 }

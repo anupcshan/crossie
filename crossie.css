@@ -20,12 +20,21 @@ table {
 .cluenum {
 	font-size: 10px;
 	position: absolute;;
-	left: 0px;
-	top: -2px;
+	left: 2px;
+	top: 0px;
+	z-index: 1;
 }
 
 .cluecharacter {
 	position: absolute;
 	left: 9px;
 	top: 2px;
+}
+
+.characterinput {
+	position: absolute;
+	width: 27px;
+	height: 26px;
+	top: -1px;
+	left: -1px;
 }
