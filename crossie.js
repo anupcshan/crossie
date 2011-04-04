@@ -1,5 +1,6 @@
 characters = {};
 currentcell = null;
+dirn = 'across';
 
 function runCrossie() {
 	if (! testLocalStorage()) {
@@ -83,6 +84,7 @@ function showTable() {
 	saveLocalStorageValues();
 	$('.not-blacked-out').click(handleClick);
 	$('.characterinput').blur(handleBlur);
+	$('.characterinput').keyup(handleKeyUp);
 }
 
 function showClues() {
@@ -107,6 +109,9 @@ function showClues() {
 		$(clue).html(i + ") " + down[i].clue + " " + down[i].chars);
 		$(downDiv).append(clue);
 	}
+
+	$(acrossDiv).click(function() {dirn = 'across'});
+	$(downDiv).click(function() {dirn = 'down'});
 }
 
 function loadLocalStorageValues() {
@@ -140,4 +145,18 @@ function handleBlur() {
 	var txtnode = chldrn[chldrn.length - 2];
 	$(txtnode).text(characters[arr]);
 	saveLocalStorageValues();
+}
+
+function handleKeyUp() {
+	$(this).blur();
+	var parnt = $(this).parent();
+	var celldata = $(parnt).data();
+	var arr = [celldata[0], celldata[1]];
+	if (dirn == 'across') {
+		arr[1] ++;
+	}
+	else {
+		arr[0] ++;
+	}
+	$($('td')[arr[0]*15 + arr[1]]).children().click();
 }
