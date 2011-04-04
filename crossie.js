@@ -1,9 +1,12 @@
+characters = {};
+
 function runCrossie() {
 	if (! testLocalStorage()) {
 		return;
 	}
 //	alert("And... We're good to go!");
 
+	loadLocalStorageValues();
 	showTable();
 }
 
@@ -47,6 +50,8 @@ function showTable() {
 				$(tcell).addClass('blacked-out');
 			}
 			else {
+				if (!characters[[i,j]])
+					characters[[i,j]] = '';
 				var tcelldiv = $('<div>');
 				$(tcelldiv).addClass('not-blacked-out');
 				$(tcell).append(tcelldiv);
@@ -59,9 +64,25 @@ function showTable() {
 				}
 
 				var character = $('<span>');
+				$(character).text(characters[[i,j]]);
 				$(character).addClass('cluecharacter');
 				$(tcelldiv).append(character);
 			}
 		}
 	}
+
+	saveLocalStorageValues();
+	$('.not-blacked-out').click(handleClick);
+}
+
+function loadLocalStorageValues() {
+	characters = JSON.parse(localStorage.getItem('characters')) || {};
+}
+
+function saveLocalStorageValues() {
+	localStorage.setItem('characters', JSON.stringify(characters));
+}
+
+function handleClick() {
+	// Handle click on a white square.
 }
