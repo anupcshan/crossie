@@ -1,15 +1,24 @@
 #!/usr/bin/python
 
 import ImageFile
+import sys
+import re
+import urllib2
 
-fp = open("2011033099951001.jpg", "rb")
+year, month, day = sys.argv[1:]
+print "// Getting crossword page for " + day + "/" + month + "/" + year
+year = int(year)
+month = int(month)
+day = int(day)
+filename = (((year * 100 + month) * 100) + day) * 100000000 + 99951000
+pageurl = "http://www.hindu.com/thehindu/thscrip/print.pl?file=" + filename.__str__() + ".htm&date=" + year.__str__().zfill(4) + "/" + month.__str__().zfill(2) +"/" + day.__str__().zfill(2) + "/&prd=th&"
+imgurl = "http://www.hindu.com/" + year.__str__().zfill(4) + "/" + month.__str__().zfill(2) +"/" + day.__str__().zfill(2) + "/images/" + (filename + 1).__str__() + ".jpg"
+print "// HTML scraped from", pageurl
+print "// Image downloaded from", imgurl
+
+imgfp = urllib2.urlopen(imgurl)
 p = ImageFile.Parser()
-while 1:
-	s = fp.read(1024)
-	if not s:
-			break
-	p.feed(s)
-
+p.feed(imgfp.read())
 im = p.close()
 dimx, dimy = im.size
 
@@ -100,3 +109,43 @@ for startpos in starts:
 	i = i + 1
 print "];"
 #im.save("copy.jpg")
+
+
+# Done with image stuff. Now to get the clues.
+page = urllib2.urlopen(pageurl).read().split('\r\n')
+across = {}
+down = {}
+prevcnum = 0
+isacross = True
+
+for line in page:
+	if re.match('<p>\s*[0-9][0-9]*', line):
+		cnum, clue, chars = re.search('<p>\s*([0-9][0-9]*)\ (.*) (\([0-9,-]*\))', line).groups()
+		cnum = int(cnum)
+		if isacross:
+			if cnum < prevcnum:
+				isacross = False
+
+		prevcnum = cnum
+		if isacross:
+			across[cnum] = {'clue': clue, 'chars': chars}
+		else:
+			down[cnum] = {'clue': clue, 'chars': chars}
+
+print "across = {"
+i = 0
+for clue in across:
+	if i > 0:
+		print ","
+	print clue, ':', across[clue],
+	i = i + 1
+print "};"
+
+print "down = {"
+i = 0
+for clue in down:
+	if i > 0:
+		print ","
+	print clue, ':', down[clue],
+	i = i + 1
+print "};"
