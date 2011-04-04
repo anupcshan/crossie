@@ -12,6 +12,7 @@ function runCrossie() {
 }
 
 function testLocalStorage() {
+	// TODO: Need to check if value persists by using a reload/redirect.
 	// Verify that the browser supports HTML5 localStorage.
 	if (localStorage && localStorage.getItem && localStorage.setItem) {
 		var randnum = parseInt(Math.random() * 10000);
@@ -24,13 +25,13 @@ function testLocalStorage() {
 
 		// LocalStorage feature is present but not working correctly. Abort.
 		// Consider using cookies instead of localStorage as a fallback.
-		alert("This browser supports HTML5 localStorage. But this feature does not seem to be working correctly. Consider using Chrome or Firefox 3.5+");
+		alert("This browser supports HTML5 localStorage. But this feature does not seem to be working correctly. Consider using Chrome.");
 		return false;
 	}
 
 	// OK. We have an old/bad browser here. Abort.
 	// Consider using cookies instead of localStorage as a fallback.
-	alert("This browser does not support HTML5 localStorage. Consider using Chrome or Firefox 3.5+");
+	alert("This browser does not support HTML5 localStorage. Consider using Chrome.");
 	return false;
 }
 
