@@ -1,6 +1,7 @@
 characters = {};
 dirn = 'across';
 crossielist = {};
+var crossienum;
 
 function runCrossie() {
 	if (! testLocalStorage()) {
@@ -48,10 +49,6 @@ function showHeader() {
 	$(select).css('float', 'right');
 	$(header).append(select);
 	for (var crossie in crossielist) {
-		if (crossienum == null) {
-			crossienum = crossie;
-		}
-
 		var option = $('<option>');
 		$(option).attr('value', crossie).text(crossie);
 
@@ -148,8 +145,19 @@ function showClues() {
 }
 
 function loadLocalStorageValues() {
-	characters = JSON.parse(localStorage.getItem(crossienum)) || {};
 	crossielist = JSON.parse(localStorage.getItem("crossielist")) || {};
+	if (! crossienum) {
+		crossienum = JSON.parse(localStorage.getItem("currentcrossie")) || null;
+		if (! crossienum) {
+			for (var crssie in crossielist) {
+				crossienum = crssie;
+				break;
+			}
+		}
+	}
+	localStorage.setItem('currentcrossie', crossienum);
+
+	characters = JSON.parse(localStorage.getItem(crossienum)) || {};
 	var crossie = JSON.parse(localStorage.getItem(crossienum + "crossie")) || null;
 	if (! crossie) {
 		saveCrossie();
@@ -213,5 +221,6 @@ function handleKeyUp() {
 
 function switchCrossies() {
 	crossienum = $(this).val();
+	localStorage.setItem('currentcrossie', crossienum);
 	runCrossie();
 }
