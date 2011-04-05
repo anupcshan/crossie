@@ -8,6 +8,7 @@ function runCrossie() {
 //	alert("And... We're good to go!");
 
 	loadLocalStorageValues();
+	showHeader();
 	showTable();
 	showClues();
 }
@@ -36,8 +37,17 @@ function testLocalStorage() {
 	return false;
 }
 
+function showHeader() {
+	var header = $('#header');
+	$(header).html('');
+	var cnumspan = $('<span>');
+	$(cnumspan).text('The Hindu Crossword ' + crossienum);
+	$(header).append(cnumspan);
+}
+
 function showTable() {
 	var tables = $('#tables');
+	$(tables).html('');
 	var length = 15, i, j, startposnum = 0;
 
 	var tbl = $('<table>');
@@ -88,6 +98,7 @@ function showTable() {
 
 function showClues() {
 	var clues = $('#clues');
+	$(clues).html('');
 
 	var acrossDiv = $('<div>');
 	$(acrossDiv).addClass('acrossdownclues');
