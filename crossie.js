@@ -1,5 +1,6 @@
 characters = {};
 dirn = 'across';
+crossielist = {};
 
 function runCrossie() {
 	if (! testLocalStorage()) {
@@ -43,6 +44,24 @@ function showHeader() {
 	var cnumspan = $('<span>');
 	$(cnumspan).text('The Hindu Crossword ' + crossienum);
 	$(header).append(cnumspan);
+	var select = $('<select>');
+	$(select).css('float', 'right');
+	$(header).append(select);
+	for (var crossie in crossielist) {
+		if (crossienum == null) {
+			crossienum = crossie;
+		}
+
+		var option = $('<option>');
+		$(option).attr('value', crossie).text(crossie);
+
+		if (crossienum == crossie) {
+			$(option).attr('selected', 'true');
+		}
+
+		$(select).append(option);
+	}
+	$(select).change(switchCrossies);
 }
 
 function showTable() {
@@ -130,6 +149,7 @@ function showClues() {
 
 function loadLocalStorageValues() {
 	characters = JSON.parse(localStorage.getItem(crossienum)) || {};
+	crossielist = JSON.parse(localStorage.getItem("crossielist")) || {};
 	var crossie = JSON.parse(localStorage.getItem(crossienum + "crossie")) || null;
 	if (! crossie) {
 		saveCrossie();
@@ -145,7 +165,6 @@ function loadLocalStorageValues() {
 function saveCrossie() {
 	var crossie = {across: across, down: down, matrix: matrix, startpos: startpos};
 	localStorage.setItem(crossienum + "crossie", JSON.stringify(crossie));
-	var crossielist = JSON.parse(localStorage.getItem("crossielist")) || {};
 	crossielist[crossienum] = 1;
 	localStorage.setItem('crossielist', JSON.stringify(crossielist));
 }
@@ -190,4 +209,9 @@ function handleKeyUp() {
 		arr[0] ++;
 	}
 	$($('td')[arr[0]*15 + arr[1]]).children().click();
+}
+
+function switchCrossies() {
+	crossienum = $(this).val();
+	runCrossie();
 }
