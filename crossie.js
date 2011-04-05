@@ -1,5 +1,4 @@
 characters = {};
-currentcell = null;
 dirn = 'across';
 
 function runCrossie() {
@@ -120,6 +119,24 @@ function showClues() {
 
 function loadLocalStorageValues() {
 	characters = JSON.parse(localStorage.getItem(crossienum)) || {};
+	var crossie = JSON.parse(localStorage.getItem(crossienum + "crossie")) || null;
+	if (! crossie) {
+		saveCrossie();
+	}
+	else {
+		across = crossie.across;
+		down = crossie.down;
+		matrix = crossie.matrix;
+		startpos = crossie.startpos;
+	}
+}
+
+function saveCrossie() {
+	var crossie = {across: across, down: down, matrix: matrix, startpos: startpos};
+	localStorage.setItem(crossienum + "crossie", JSON.stringify(crossie));
+	var crossielist = JSON.parse(localStorage.getItem("crossielist")) || {};
+	crossielist[crossienum] = 1;
+	localStorage.setItem('crossielist', JSON.stringify(crossielist));
 }
 
 function saveLocalStorageValues() {
@@ -135,7 +152,6 @@ function handleClick() {
 	$(txtbox).val(characters[arr]);
 	$(txtbox).show();
 	$(txtbox).focus();
-	currentcell = txtbox;
 }
 
 function handleBlur() {
