@@ -1,3 +1,4 @@
+currentdbversion = 1;
 characters = {};
 dirn = 'across';
 crossielist = {};
@@ -59,6 +60,9 @@ function showHeader() {
 		$(select).append(option);
 	}
 	$(select).change(switchCrossies);
+	var authr = $('<span>');
+	$(authr).css('font-size', '12pt').css('font-weight', 'normal').text('by ' + author).css('margin-left', '5px');
+	$(header).append(authr);
 }
 
 function showTable() {
@@ -163,15 +167,22 @@ function loadLocalStorageValues() {
 		saveCrossie();
 	}
 	else {
-		across = crossie.across;
-		down = crossie.down;
-		matrix = crossie.matrix;
-		startpos = crossie.startpos;
+		across = crossie.across || across;
+		down = crossie.down || down;
+		matrix = crossie.matrix || matrix;
+		startpos = crossie.startpos || startpos;
+		author = crossie.author || author;
+		var crossiedbversion = crossie.dbversion;
+		if (crossiedbversion != currentdbversion) {
+			saveCrossie();
+		}
 	}
 }
 
 function saveCrossie() {
-	var crossie = {across: across, down: down, matrix: matrix, startpos: startpos};
+	if (! (across && down && matrix && startpos && author && currentdbversion))
+		return;
+	var crossie = {across: across, down: down, matrix: matrix, startpos: startpos, author: author, dbversion: currentdbversion};
 	localStorage.setItem(crossienum + "crossie", JSON.stringify(crossie));
 	crossielist[crossienum] = 1;
 	localStorage.setItem('crossielist', JSON.stringify(crossielist));

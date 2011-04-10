@@ -117,12 +117,16 @@ across = {}
 down = {}
 prevcnum = 0
 crossienum = None
+author = None
 isacross = True
 
 for line in page:
 	if crossienum == None:
 		if re.match('The Hindu Crossword [0-9][0-9]*', line):
 			crossienum = re.search('The Hindu Crossword ([0-9][0-9]*)', line).groups()[0]
+	if author == None:
+		if re.match('^[a-zA-z][a-zA-Z ]*$', line):
+			author = line
 	if re.match('<p>\s*[0-9][0-9]*', line):
 		cnum, clue, chars = re.search('<p>\s*([0-9][0-9]*)\ (.*) (\([0-9,-]*\))', line).groups()
 		cnum = int(cnum)
@@ -137,6 +141,7 @@ for line in page:
 			down[cnum] = {'clue': clue, 'chars': chars}
 
 print "crossienum =", crossienum, ";"
+print "author = '" + author + "';"
 print "across = {"
 i = 0
 for clue in across:
