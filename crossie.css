@@ -46,6 +46,7 @@ table {
 	margin-left: -100%;
 	padding-top: 20px;
 }
+
 .cluesdiv {
 	float: left;
 	height: 96%;
@@ -62,6 +63,11 @@ table {
 	float: left;
 	padding: 5px;
 	padding-bottom: 10px;
+	background-color: white;
+}
+
+.acrossdownclues.selected {
+	background-color: yellow;
 }
 
 .headerdiv {
@@ -69,4 +75,14 @@ table {
 	text-align: center;
 	font-weight: bold;
 	font-size: 24px;
+}
+
+.selectbox {
+	float: right;
+}
+
+.authorspan {
+	font-size: 12pt;
+	font-weight: normal;
+	margin-left: 5px;
 }

@@ -47,7 +47,7 @@ function showHeader() {
 	$(cnumspan).text('The Hindu Crossword ' + crossienum);
 	$(header).append(cnumspan);
 	var select = $('<select>');
-	$(select).css('float', 'right');
+	$(select).addClass('selectbox');
 	$(header).append(select);
 	for (var crossie in crossielist) {
 		var option = $('<option>');
@@ -61,7 +61,7 @@ function showHeader() {
 	}
 	$(select).change(switchCrossies);
 	var authr = $('<span>');
-	$(authr).css('font-size', '12pt').css('font-weight', 'normal').text('by ' + author).css('margin-left', '5px');
+	$(authr).addClass('authorspan').text('by ' + author);
 	$(header).append(authr);
 }
 
@@ -140,12 +140,12 @@ function showClues() {
 		$(downDiv).append(clue);
 	}
 
-	$(acrossDiv).click(function() {dirn = 'across'; $(acrossDiv).css('background-color', 'yellow'); $(downDiv).css('background-color', 'white');});
-	$(downDiv).click(function() {dirn = 'down'; $(downDiv).css('background-color', 'yellow'); $(acrossDiv).css('background-color', 'white');});
+	$(acrossDiv).click(function() {dirn = 'across'; $(acrossDiv).addClass('selected'); $(downDiv).removeClass('selected');});
+	$(downDiv).click(function() {dirn = 'down'; $(acrossDiv).removeClass('selected'); $(downDiv).addClass('selected');});
 
 	dirn = 'across';
-	$(acrossDiv).css('background-color', 'yellow');
-	$(downDiv).css('background-color', 'white');
+	$(acrossDiv).addClass('selected');
+	$(downDiv).removeClass('selected');
 }
 
 function loadLocalStorageValues() {
