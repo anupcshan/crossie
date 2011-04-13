@@ -116,6 +116,14 @@ function showTable() {
 	$('.characterinput').keyup(handleKeyUp);
 }
 
+function addClue(cluenum, clueobj, container, dirn) {
+	var clue = $('<div>');
+	$(clue).html(cluenum + ") " + clueobj.clue + " " + clueobj.chars);
+	$(clue).addClass('clue');
+	$(clue).data('cluemeta', {cluenum: cluenum, dirn: dirn});
+	$(container).append(clue);
+}
+
 function showClues() {
 	var clues = $('#clues');
 	$(clues).html('');
@@ -125,9 +133,7 @@ function showClues() {
 	$(clues).append(acrossDiv);
 	$(acrossDiv).append('<h3>Across</h3>');
 	for (var i in across) {
-		var clue = $('<div>');
-		$(clue).html(i + ") " + across[i].clue + " " + across[i].chars);
-		$(acrossDiv).append(clue);
+		addClue(i, across[i], acrossDiv, 'across');
 	}
 
 	var downDiv = $('<div>');
@@ -135,9 +141,7 @@ function showClues() {
 	$(clues).append(downDiv);
 	$(downDiv).append('<h3>Down</h3>');
 	for (var i in down) {
-		var clue = $('<div>');
-		$(clue).html(i + ") " + down[i].clue + " " + down[i].chars);
-		$(downDiv).append(clue);
+		addClue(i, down[i], downDiv, 'down');
 	}
 
 	$(acrossDiv).click(function() {dirn = 'across'; $(acrossDiv).addClass('selected'); $(downDiv).removeClass('selected');});
@@ -146,6 +150,8 @@ function showClues() {
 	dirn = 'across';
 	$(acrossDiv).addClass('selected');
 	$(downDiv).removeClass('selected');
+
+	$('.clue').click(handleClueClick);
 }
 
 function loadLocalStorageValues() {
@@ -227,6 +233,13 @@ function handleKeyUp() {
 	else {
 		arr[0] ++;
 	}
+	$($('td')[arr[0]*15 + arr[1]]).children().click();
+}
+
+function handleClueClick() {
+	var cluemeta = $(this).data('cluemeta');
+	var cluenum = cluemeta.cluenum;
+	var arr = startpos[cluenum - 1];
 	$($('td')[arr[0]*15 + arr[1]]).children().click();
 }
 

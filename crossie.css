@@ -86,3 +86,7 @@ table {
 	font-weight: normal;
 	margin-left: 5px;
 }
+
+.clue {
+	cursor: hand;
+}
