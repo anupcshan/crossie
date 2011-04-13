@@ -4,8 +4,20 @@ import ImageFile
 import sys
 import re
 import urllib2
+import datetime
 
-year, month, day = sys.argv[1:]
+if len(sys.argv[1:]) == 0:
+	today = datetime.datetime.today()
+	year = today.year.__str__()
+	month = today.month.__str__()
+	day = today.day.__str__()
+elif len(sys.argv[1:]) < 3:
+	print "Error : Not enough arguments provided."
+	print "Usage :", sys.argv[0], "yyyy mm dd"
+	exit(-1)
+else:
+	year, month, day = sys.argv[1:]
+
 print "// Getting crossword page for " + day + "/" + month + "/" + year
 year = int(year)
 month = int(month)
