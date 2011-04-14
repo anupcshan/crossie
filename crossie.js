@@ -222,6 +222,10 @@ function handleBlur() {
 	saveLocalStorageValues();
 }
 
+function getCrosswordDivXY(arr) {
+	return $($('td')[arr[0]*15 + arr[1]]).children();
+}
+
 function handleKeyUp() {
 	$(this).blur();
 	var parnt = $(this).parent();
@@ -233,14 +237,14 @@ function handleKeyUp() {
 	else {
 		arr[0] ++;
 	}
-	$($('td')[arr[0]*15 + arr[1]]).children().click();
+	getCrosswordDivXY(arr).click();
 }
 
 function handleClueClick() {
 	var cluemeta = $(this).data('cluemeta');
 	var cluenum = cluemeta.cluenum;
 	var arr = startpos[cluenum - 1];
-	$($('td')[arr[0]*15 + arr[1]]).children().click();
+	getCrosswordDivXY(arr).click();
 }
 
 function switchCrossies() {
