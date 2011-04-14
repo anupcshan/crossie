@@ -69,8 +69,8 @@ for i in range(0, length):
 
 for i in range(0, length):
 	for j in range(0, length):
-		x = boxx * (i + 0.5)
-		y = boxy * (j + 0.5)
+		x = boxx * (i + 0.5) + 0.5
+		y = boxy * (j + 0.5) + 0.5
 #		print j, i, im.getpixel((x, y))
 		if (im.getpixel((x, y)) == (255, 255, 255)):
 			arr[j][i] = 1
