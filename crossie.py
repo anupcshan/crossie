@@ -137,7 +137,7 @@ for line in page:
 		if re.match('The Hindu Crossword [0-9][0-9]*', line):
 			crossienum = re.search('The Hindu Crossword ([0-9][0-9]*)', line).groups()[0]
 	if author == None:
-		if re.match('^[a-zA-z][a-zA-Z ]*$', line):
+		if re.match('^[a-zA-z][a-zA-Z .]*$', line):
 			author = line
 	if re.match('<p>\s*[0-9][0-9]*', line):
 		cnum, clue, chars = re.search('<p>\s*([0-9][0-9]*)\ (.*) (\([0-9,-]*\))', line).groups()
