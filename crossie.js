@@ -2,7 +2,13 @@ currentdbversion = 1;
 characters = {};
 dirn = 'across';
 crossielist = {};
+cluecells = {};
 var crossienum;
+
+DOWN = 1, ACROSS = 2;
+
+cluecells[DOWN] = [];
+cluecells[ACROSS] = [];
 
 function runCrossie() {
 	if (! testLocalStorage()) {
@@ -70,31 +76,50 @@ function showTable() {
 	$(tables).html('');
 	var length = 15, i, j, startposnum = 0;
 
+	var downstarters = [];
 	var tbl = $('<table>');
 	$(tables).append(tbl);
 	$(tbl).attr('border', 1);
 	for (i = 0; i < 15; i ++) {
 		var trow = $('<tr>');
+		var acrossstarter = undefined;
 		$(tbl).append(trow);
 		for (j = 0; j < 15; j ++) {
 			var tcell = $('<td>');
 			$(trow).append(tcell);
 			if (matrix[i][j] == 0) {
 				$(tcell).addClass('blacked-out');
+				downstarters[j] = undefined;
+				acrossstarter = undefined;
 			}
 			else {
 				if (!characters[[i,j]])
 					characters[[i,j]] = '';
 				var tcelldiv = $('<div>');
 				$(tcelldiv).addClass('not-blacked-out');
-				$(tcelldiv).data([i, j]);
+				$(tcelldiv).data('x', i);
+				$(tcelldiv).data('y', j);
 				$(tcell).append(tcelldiv);
 				var nxtstartpos = startpos[startposnum];
 				if (nxtstartpos && nxtstartpos[0] == i && nxtstartpos[1] == j) {
 					var cluenum = $('<span>');
 					$(cluenum).text(++ startposnum);
+					if (nxtstartpos[2] & DOWN) {
+						downstarters[j] = startposnum;
+					}
+					if (nxtstartpos[2] & ACROSS) {
+						acrossstarter = startposnum;
+					}
 					$(cluenum).addClass('cluenum');
 					$(tcelldiv).append(cluenum);
+				}
+
+				if (acrossstarter != undefined) {
+					$(tcelldiv).data('acrossstart', acrossstarter);
+				}
+
+				if (downstarters[j] != undefined) {
+					$(tcelldiv).data('downstart', downstarters[j]);
 				}
 
 				var character = $('<span>');
@@ -116,12 +141,47 @@ function showTable() {
 	$('.characterinput').keyup(handleKeyUp);
 }
 
+function recalcClueCompletion(cluenum, dirn) {
+	cluenum = parseInt(cluenum) - 1;
+	var startp = startpos[cluenum];
+	var dx = 0, dy = 0, x = startp[0], y = startp[1], c;
+	var filledchars = 0;
+	if (dirn == ACROSS) {
+		dy = 1;
+	}
+	else {
+		dx = 1;
+	}
+
+	while ((c = characters[[x, y]]) != undefined) {
+		x += dx;
+		y += dy;
+		if (c != '')
+			filledchars ++;
+	}
+
+	$(cluecells[dirn][cluenum]).data('cluemeta')['filled'] = filledchars;
+	totalchars = $(cluecells[dirn][cluenum]).data('cluemeta')['length'];
+	if (filledchars == totalchars) {
+		$(cluecells[dirn][cluenum]).addClass('filled');
+	}
+	else {
+		$(cluecells[dirn][cluenum]).removeClass('filled');
+	}
+}
+
 function addClue(cluenum, clueobj, container, dirn) {
 	var clue = $('<div>');
 	$(clue).html(cluenum + ") " + clueobj.clue + " " + clueobj.chars);
+	var charsplit = clueobj.chars.split(/[()]+/)[1].split(/[,-]+/);
+	var totalchars = 0;
+	for (var i = 0; i < charsplit.length; i ++)
+		totalchars += parseInt(charsplit[i]);
 	$(clue).addClass('clue');
-	$(clue).data('cluemeta', {cluenum: cluenum, dirn: dirn});
+	$(clue).data('cluemeta', {cluenum: cluenum, dirn: dirn, length: totalchars, filled: 0});
 	$(container).append(clue);
+	cluecells[dirn][cluenum - 1] = $(clue).get()[0];
+	recalcClueCompletion(cluenum, dirn);
 }
 
 function showClues() {
@@ -133,7 +193,7 @@ function showClues() {
 	$(clues).append(acrossDiv);
 	$(acrossDiv).append('<h3>Across</h3>');
 	for (var i in across) {
-		addClue(i, across[i], acrossDiv, 'across');
+		addClue(i, across[i], acrossDiv, ACROSS);
 	}
 
 	var downDiv = $('<div>');
@@ -141,7 +201,7 @@ function showClues() {
 	$(clues).append(downDiv);
 	$(downDiv).append('<h3>Down</h3>');
 	for (var i in down) {
-		addClue(i, down[i], downDiv, 'down');
+		addClue(i, down[i], downDiv, DOWN);
 	}
 
 	$(acrossDiv).click(function() {dirn = 'across'; $(acrossDiv).addClass('selected'); $(downDiv).removeClass('selected');});
@@ -202,8 +262,9 @@ function handleClick() {
 	// Handle click on a white square.
 	var chldrn = $(this).children();
 	var txtbox = chldrn[chldrn.length - 1];
-	var celldata = $(this).data();
-	var arr = [celldata[0], celldata[1]];
+	var x = $(this).data('x');
+	var y = $(this).data('y');
+	var arr = [x, y];
 	$(txtbox).val(characters[arr]);
 	$(txtbox).show();
 	$(txtbox).focus();
@@ -212,13 +273,18 @@ function handleClick() {
 function handleBlur() {
 	// When text input box loses focus.
 	var parnt = $(this).parent();
-	var celldata = $(parnt).data();
-	var arr = [celldata[0], celldata[1]];
+	var x = $(parnt).data('x');
+	var y = $(parnt).data('y');
+	var arr = [x, y];
 	characters[arr] = $(this).val();
 	$(this).hide();
 	var chldrn = $(parnt).children();
 	var txtnode = chldrn[chldrn.length - 2];
 	$(txtnode).text(characters[arr]);
+	if ($(parnt).data('acrossstart'))
+		recalcClueCompletion($(parnt).data('acrossstart'), ACROSS);
+	if ($(parnt).data('downstart'))
+		recalcClueCompletion($(parnt).data('downstart'), DOWN);
 	saveLocalStorageValues();
 }
 
@@ -229,8 +295,9 @@ function getCrosswordDivXY(arr) {
 function handleKeyUp() {
 	$(this).blur();
 	var parnt = $(this).parent();
-	var celldata = $(parnt).data();
-	var arr = [celldata[0], celldata[1]];
+	var x = $(parnt).data('x');
+	var y = $(parnt).data('y');
+	var arr = [x, y];
 	if (dirn == 'across') {
 		arr[1] ++;
 	}

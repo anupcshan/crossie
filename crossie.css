@@ -90,3 +90,8 @@ table {
 .clue {
 	cursor: hand;
 }
+
+.clue.filled {
+	text-decoration: line-through;
+	color: gray;
+}
