@@ -1,0 +1,20 @@
+application: onlinecrossie
+version: 1
+runtime: python
+api_version: 1
+
+default_expiration: "1h"
+
+handlers:
+- url: /matrix.js
+  script: crossie_app.py
+  login: required
+
+- url: /
+  static_files: index.html
+  upload: index.html
+  login: required
+
+- url: /static_files
+  static_dir: static_files
+  login: required
