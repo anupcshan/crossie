@@ -8,13 +8,13 @@ default_expiration: "1h"
 handlers:
 - url: /matrix.js
   script: crossie_app.py
-  login: required
+  login: admin
 
 - url: /
   static_files: index.html
   upload: index.html
-  login: required
+  login: admin
 
 - url: /static_files
   static_dir: static_files
-  login: required
+  login: admin
