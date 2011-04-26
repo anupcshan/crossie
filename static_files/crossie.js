@@ -319,3 +319,11 @@ function switchCrossies() {
 	localStorage.setItem('currentcrossie', crossienum);
 	runCrossie();
 }
+
+function activateLightbox() {
+	$("#lightbox").addClass('lightbox');
+}
+
+function deactivateLightbox() {
+	$("#lightbox").removeClass('lightbox');
+}

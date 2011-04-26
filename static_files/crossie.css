@@ -95,3 +95,14 @@ table {
 	text-decoration: line-through;
 	color: gray;
 }
+
+.lightbox {
+	z-index: 15;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background-color: #111111;
+	position: absolute;
+	opacity: 0.50;
+}
