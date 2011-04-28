@@ -7,14 +7,12 @@ import urllib2
 import datetime
 import png
 import StringIO
+import simplejson
 
 def getpixel(x, y):
 	x = int(x)
 	y = int(y)
 	return img[y][x * 4]
-
-def putpixel(x, y, color):
-	img[y][x * 4] = color
 
 if len(sys.argv[1:]) == 0:
 	today = datetime.datetime.today()
@@ -28,16 +26,13 @@ elif len(sys.argv[1:]) < 3:
 else:
 	year, month, day = sys.argv[1:]
 
-print "Content-Type: application/javascript"
-print "// Getting crossword page for " + day + "/" + month + "/" + year
+print "Content-Type: application/json"
 year = int(year)
 month = int(month)
 day = int(day)
 filename = (((year * 100 + month) * 100) + day) * 100000000 + 99951000
 pageurl = "http://www.hindu.com/thehindu/thscrip/print.pl?file=" + filename.__str__() + ".htm&date=" + year.__str__().zfill(4) + "/" + month.__str__().zfill(2) +"/" + day.__str__().zfill(2) + "/&prd=th&"
 imgurl = "http://www.hindu.com/" + year.__str__().zfill(4) + "/" + month.__str__().zfill(2) +"/" + day.__str__().zfill(2) + "/images/" + (filename + 1).__str__() + ".jpg"
-print "// HTML scraped from", pageurl
-print "// Image downloaded from", imgurl
 
 imgdata = urllib2.urlopen(imgurl).read()
 im = Image(imgdata)
@@ -84,20 +79,15 @@ for i in range(0, length):
 			arr[j][i] = 1
 		else:
 			arr[j][i] = 0
-#		putpixel(x, y, 255)
 
-print "matrix = [",
+matrix = []
 for i in range(0, length):
-	if i >= 1:
-		print ","
-	print "[",
+	matrix.append([])
 	for j in range(0, length):
-		if j >= 1:
-			print ",",
 		down[i][j] = across[i][j] = 0
 		if arr[i][j] == 1:
 			down[i][j] = across[i][j] = 1
-			print "1",
+			matrix[i].append(1)
 			if i > 0:
 				down[i][j] = down[i-1][j] + 1
 				if down[i][j] == 2:
@@ -113,23 +103,14 @@ for i in range(0, length):
 					else:
 						startlist[(i, j-1)] = 2
 		else:
-			print "0",
-	print "]",
-print "];"
+			matrix[i].append(0)
 
 starts = startlist.keys()
 starts.sort()
-print "startpos = [",
+startpos = []
 
-i = 0
-for startpos in starts:
-	if i > 0:
-		print ",",
-	print "[", startpos[0], ",", startpos[1], ",", startlist[startpos], "]",
-	i = i + 1
-print "];"
-#im.save("copy.jpg")
-
+for startposn in starts:
+	startpos.append([startposn[0], startposn[1], startlist[startposn]])
 
 # Done with image stuff. Now to get the clues.
 page = urllib2.urlopen(pageurl).read().split('\r\n')
@@ -160,22 +141,12 @@ for line in page:
 		else:
 			down[cnum] = {'clue': clue, 'chars': chars}
 
-print "crossienum =", crossienum, ";"
-print "author = '" + author + "';"
-print "across = {"
-i = 0
-for clue in across:
-	if i > 0:
-		print ","
-	print clue, ':', across[clue],
-	i = i + 1
-print "};"
-
-print "down = {"
-i = 0
-for clue in down:
-	if i > 0:
-		print ","
-	print clue, ':', down[clue],
-	i = i + 1
-print "};"
+crssie = {}
+crssie['matrix'] = matrix
+crssie['startpos'] = startpos
+crssie['crossienum'] = crossienum
+crssie['author'] = author
+crssie['across'] = across
+crssie['down'] = down
+print
+print simplejson.dumps(crssie)

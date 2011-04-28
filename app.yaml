@@ -6,7 +6,7 @@ api_version: 1
 default_expiration: "1h"
 
 handlers:
-- url: /matrix.js
+- url: /ajax/v1
   script: crossie_app.py
   login: admin
 

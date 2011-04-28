@@ -16,7 +16,28 @@ function runCrossie() {
 	}
 //	alert("And... We're good to go!");
 
-	loadLocalStorageValues();
+	if (loadLocalStorageValues()) {
+		renderPage();
+	}
+	else {
+		$.ajax({url: '/ajax/v1', success: getCrossieDataCallback});
+	}
+}
+
+function getCrossieDataCallback(data) {
+	across = data.across;
+	author = data.author;
+	down = data.down;
+	matrix = data.matrix;
+	startpos = data.startpos;
+	crossienum = data.crossienum;
+
+	if (loadLocalStorageValues()) {
+		renderPage();
+	}
+}
+
+function renderPage() {
 	showHeader();
 	showTable();
 	showClues();
@@ -225,6 +246,11 @@ function loadLocalStorageValues() {
 			}
 		}
 	}
+
+	if (! crossienum) {
+		// No crossie loaded.. Stop and try loading a list..
+		return 0;
+	}
 	localStorage.setItem('currentcrossie', crossienum);
 
 	characters = JSON.parse(localStorage.getItem(crossienum)) || {};
@@ -243,6 +269,8 @@ function loadLocalStorageValues() {
 			saveCrossie();
 		}
 	}
+
+	return 1;
 }
 
 function saveCrossie() {
