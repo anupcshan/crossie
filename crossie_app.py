@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from google.appengine.api.images import *
+from google.appengine.ext import db
 import sys
 import re
 import urllib2
@@ -8,6 +9,11 @@ import datetime
 import png
 import StringIO
 import simplejson
+
+class CrossieMetaData(db.Model):
+	crossienum = db.IntegerProperty(required=True)
+	date = db.DateProperty(required=True)
+	metadata = db.TextProperty(required=True)
 
 def getpixel(img, x, y):
 	x = int(x)
@@ -116,7 +122,7 @@ def fetchpage(year=0, month=0, day=0):
 	for line in page:
 		if crossienum == None:
 			if re.match('The Hindu Crossword [^0-9]*[0-9][0-9]*', line):
-				crossienum = re.search('The Hindu Crossword [^0-9]*([0-9][0-9]*)', line).groups()[0]
+				crossienum = int(re.search('The Hindu Crossword [^0-9]*([0-9][0-9]*)', line).groups()[0])
 		if author == None:
 			if re.match('^[a-zA-z][a-zA-Z .]*$', line):
 				author = line
@@ -143,6 +149,9 @@ def fetchpage(year=0, month=0, day=0):
 	crssie['date'] = {'year': year, 'month': month, 'day': day}
 	print
 	print simplejson.dumps(crssie)
+
+	crssiemetadata = CrossieMetaData(crossienum=crossienum, date=datetime.date(year, month, day), metadata=simplejson.dumps(crssie), key_name=crossienum.__str__())
+	crssiemetadata.put()
 
 if __name__ == "__main__":
 	fetchpage()
