@@ -17,6 +17,7 @@ import simplejson
 class CrossieMetaData(db.Model):
 	crossienum = db.IntegerProperty(required=True)
 	date = db.DateProperty(required=True)
+	updated = db.DateTimeProperty(required=True, auto_now=True)
 	metadata = db.TextProperty(required=True)
 
 def getpixel(img, x, y):
@@ -191,7 +192,19 @@ class GetCrossie(webapp.RequestHandler):
 
 		self.response.out.write(metadata)
 
-application = webapp.WSGIApplication([('/api/v1/getcrossie', GetCrossie)])
+class GetCrossieList(webapp.RequestHandler):
+	def get(self):
+		self.response.headers['Content-Type'] = 'application/json'
+		q = CrossieMetaData.all()
+		list = []
+
+		for md in q:
+			list.append({"crossienum": md.crossienum, "date": md.date.__str__()})
+
+		crossielist = {'list': list, 'lastupdated': datetime.datetime.now().__str__()}
+		self.response.out.write(simplejson.dumps(crossielist))
+
+application = webapp.WSGIApplication([('/api/v1/getcrossie', GetCrossie), ('/api/v1/getcrossielist', GetCrossieList)])
 
 if __name__ == "__main__":
 	run_wsgi_app(application)
