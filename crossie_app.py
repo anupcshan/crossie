@@ -20,14 +20,7 @@ def getpixel(img, x, y):
 	y = int(y)
 	return img[y][x * 4]
 
-def fetchpage(year=0, month=0, day=0):
-	if year == 0:
-		today = datetime.datetime.today()
-		year = today.year
-		month = today.month
-		day = today.day
-
-	print "Content-Type: application/json"
+def fetchpage(year, month, day):
 	filename = (((year * 100 + month) * 100) + day) * 100000000 + 99951000
 	pageurl = "http://www.hindu.com/thehindu/thscrip/print.pl?file=" + filename.__str__() + ".htm&date=" + year.__str__().zfill(4) + "/" + month.__str__().zfill(2) +"/" + day.__str__().zfill(2) + "/&prd=th&"
 	imgurl = "http://www.hindu.com/" + year.__str__().zfill(4) + "/" + month.__str__().zfill(2) +"/" + day.__str__().zfill(2) + "/images/" + (filename + 1).__str__() + ".jpg"
@@ -153,5 +146,25 @@ def fetchpage(year=0, month=0, day=0):
 	crssiemetadata = CrossieMetaData(crossienum=crossienum, date=datetime.date(year, month, day), metadata=simplejson.dumps(crssie), key_name=crossienum.__str__())
 	crssiemetadata.put()
 
+def getmetadatafromDS(year, month, day):
+	date=datetime.date(year, month, day)
+	q = CrossieMetaData.all()
+	q.filter("date", date)
+	results = q.fetch(1)
+
+	for md in results:
+		print
+		print md.metadata
+		return 1
+
+	return 0
+
 if __name__ == "__main__":
-	fetchpage()
+	print "Content-Type: application/json"
+	today = datetime.datetime.today()
+	year = today.year
+	month = today.month
+	day = today.day
+
+	if getmetadatafromDS(year, month, day) == 0:
+		fetchpage(year, month, day)
