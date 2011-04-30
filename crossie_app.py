@@ -2,6 +2,7 @@
 
 from google.appengine.api.images import *
 from google.appengine.ext import db
+from google.appengine.api import memcache
 import sys
 import re
 import urllib2
@@ -145,9 +146,24 @@ def fetchpage(year, month, day):
 
 	crssiemetadata = CrossieMetaData(crossienum=crossienum, date=datetime.date(year, month, day), metadata=simplejson.dumps(crssie), key_name=crossienum.__str__())
 	crssiemetadata.put()
+	memcache.add(datetime.date(year, month, day).__str__(), simplejson.dumps(crssie))
+
+def getmetadatafromMemcache(year, month, day):
+	date=datetime.date(year, month, day)
+	metadata = memcache.get(date.__str__())
+
+	if metadata is not None:
+		print
+		print metadata
+		return 1
+	return 0
 
 def getmetadatafromDS(year, month, day):
 	date=datetime.date(year, month, day)
+
+	if getmetadatafromMemcache(year, month, day) == 1:
+		return 1
+
 	q = CrossieMetaData.all()
 	q.filter("date", date)
 	results = q.fetch(1)
@@ -155,6 +171,7 @@ def getmetadatafromDS(year, month, day):
 	for md in results:
 		print
 		print md.metadata
+		memcache.add(date.__str__(), md.metadata)
 		return 1
 
 	return 0
