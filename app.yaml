@@ -15,6 +15,10 @@ handlers:
   upload: index.html
   login: admin
 
+- url: /favicon.ico
+  static_files: static_files/favicon.ico
+  upload: static_files/favicon.ico
+
 - url: /static_files
   static_dir: static_files
   login: admin
