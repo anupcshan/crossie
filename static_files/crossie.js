@@ -20,7 +20,7 @@ function runCrossie() {
 		renderPage();
 	}
 	else {
-		$.ajax({url: '/ajax/v1', success: getCrossieDataCallback});
+		$.ajax({url: '/api/v1/getcrossie', success: getCrossieDataCallback});
 	}
 }
 

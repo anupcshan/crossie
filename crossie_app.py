@@ -3,6 +3,9 @@
 from google.appengine.api.images import *
 from google.appengine.ext import db
 from google.appengine.api import memcache
+from google.appengine.ext import webapp
+from google.appengine.ext.webapp.util import run_wsgi_app
+
 import sys
 import re
 import urllib2
@@ -141,47 +144,54 @@ def fetchpage(year, month, day):
 	crssie['across'] = across
 	crssie['down'] = down
 	crssie['date'] = {'year': year, 'month': month, 'day': day}
-	print
-	print simplejson.dumps(crssie)
 
-	crssiemetadata = CrossieMetaData(crossienum=crossienum, date=datetime.date(year, month, day), metadata=simplejson.dumps(crssie), key_name=crossienum.__str__())
+	metadatajson = simplejson.dumps(crssie)
+	crssiemetadata = CrossieMetaData(crossienum=crossienum, date=datetime.date(year, month, day), metadata=metadatajson, key_name=crossienum.__str__())
 	crssiemetadata.put()
-	memcache.add(datetime.date(year, month, day).__str__(), simplejson.dumps(crssie))
+	memcache.add(datetime.date(year, month, day).__str__(), metadatajson)
+	return metadatajson
 
 def getmetadatafromMemcache(year, month, day):
-	date=datetime.date(year, month, day)
+	date = datetime.date(year, month, day)
 	metadata = memcache.get(date.__str__())
 
 	if metadata is not None:
-		print
-		print metadata
-		return 1
-	return 0
+		return metadata
+
+	return None
 
 def getmetadatafromDS(year, month, day):
-	date=datetime.date(year, month, day)
+	date = datetime.date(year, month, day)
 
-	if getmetadatafromMemcache(year, month, day) == 1:
-		return 1
+	metadata = getmetadatafromMemcache(year, month, day)
+	if metadata is not None:
+		return metadata
 
 	q = CrossieMetaData.all()
 	q.filter("date", date)
 	results = q.fetch(1)
 
 	for md in results:
-		print
-		print md.metadata
 		memcache.add(date.__str__(), md.metadata)
-		return 1
+		return md.metadata
 
-	return 0
+	return None
+
+class GetCrossie(webapp.RequestHandler):
+	def get(self):
+		self.response.headers['Content-Type'] = 'application/json'
+		today = datetime.datetime.today()
+		year = today.year
+		month = today.month
+		day = today.day
+
+		metadata = getmetadatafromDS(year, month, day)
+		if metadata is None:
+			metadata = fetchpage(year, month, day)
+
+		self.response.out.write(metadata)
+
+application = webapp.WSGIApplication([('/api/v1/getcrossie', GetCrossie)])
 
 if __name__ == "__main__":
-	print "Content-Type: application/json"
-	today = datetime.datetime.today()
-	year = today.year
-	month = today.month
-	day = today.day
-
-	if getmetadatafromDS(year, month, day) == 0:
-		fetchpage(year, month, day)
+	run_wsgi_app(application)
