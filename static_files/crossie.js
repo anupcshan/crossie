@@ -16,13 +16,16 @@ DOWN = 1, ACROSS = 2;
 cluecells[DOWN] = [];
 cluecells[ACROSS] = [];
 
-function runCrossie() {
+function startup() {
 	if (! testLocalStorage()) {
 		return;
 	}
-//	alert("And... We're good to go!");
 
 	loadAndUpdateCrossieList();
+	runCrossie();
+}
+
+function runCrossie() {
 	if (loadLocalStorageValues()) {
 		renderPage();
 	}
