@@ -8,6 +8,7 @@ down = {};
 matrix = {};
 startpos = {};
 author = null;
+crossiedate = null;
 var crossienum;
 
 DOWN = 1, ACROSS = 2;
@@ -33,6 +34,7 @@ function getCrossieDataCallback(data) {
 	matrix = data.matrix;
 	startpos = data.startpos;
 	crossienum = data.crossienum;
+	crossiedate = data.date;
 
 	if (loadLocalStorageValues()) {
 		renderPage();
@@ -93,7 +95,7 @@ function showHeader() {
 	$(header).append(select);
 	for (var i = 0; i < crossielist.list.length; i ++) {
 		var option = $('<option>');
-		$(option).attr('value', crossielist.list[i].crossienum).text(crossielist.list[i].crossienum);
+		$(option).attr('value', JSON.stringify(crossielist.list[i])).text(crossielist.list[i].crossienum);
 
 		if (crossienum == crossielist.list[i].crossienum) {
 			$(option).attr('selected', 'true');
@@ -289,6 +291,7 @@ function loadLocalStorageValues() {
 		matrix = crossie.matrix || matrix;
 		startpos = crossie.startpos || startpos;
 		author = crossie.author || author;
+		crossiedate = crossie.crossiedate || crossiedate;
 		var crossiedbversion = crossie.dbversion;
 		if (crossiedbversion != currentdbversion) {
 			saveCrossie();
@@ -299,9 +302,9 @@ function loadLocalStorageValues() {
 }
 
 function saveCrossie() {
-	if (! (across && down && matrix.length && startpos.length))
+	if (! (across && down && matrix.length && startpos.length && crossiedate))
 		return 0;
-	var crossie = {across: across, down: down, matrix: matrix, startpos: startpos, author: author, dbversion: currentdbversion};
+	var crossie = {across: across, down: down, matrix: matrix, startpos: startpos, author: author, dbversion: currentdbversion, crossiedate: crossiedate};
 	localStorage.setItem(crossienum + "crossie", JSON.stringify(crossie));
 	return 1;
 }
@@ -367,7 +370,8 @@ function handleClueClick() {
 }
 
 function switchCrossies() {
-	crossienum = $(this).val();
+	crossienum = JSON.parse($(this).val()).crossienum;
+	crossiedate = JSON.parse($(this).val()).date;
 	author = null;
 	across = down = startpos = matrix = {};
 	if (loadLocalStorageValues())
