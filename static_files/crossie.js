@@ -40,9 +40,7 @@ function getCrossieDataCallback(data) {
 	crossienum = data.crossienum;
 	crossiedate = data.date;
 
-	if (loadLocalStorageValues()) {
-		renderPage();
-	}
+	runCrossie();
 }
 
 function sortCrossieList() {
@@ -68,9 +66,7 @@ function getCrossieListCallback(data) {
 	crossielist.lastupdated = data.lastupdated;
 	localStorage.setItem('crossielist', JSON.stringify(crossielist));
 
-	if (loadLocalStorageValues()) {
-		renderPage();
-	}
+	runCrossie();
 }
 
 function renderPage() {
@@ -405,6 +401,5 @@ function switchCrossies() {
 	crossiedate = JSON.parse($(this).val()).date;
 	author = null;
 	across = down = startpos = matrix = {};
-	if (loadLocalStorageValues())
-		runCrossie();
+	runCrossie();
 }
