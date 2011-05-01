@@ -3,6 +3,11 @@ characters = {};
 dirn = 'across';
 crossielist = {};
 cluecells = {};
+across = {};
+down = {};
+matrix = {};
+startpos = {};
+author = null;
 var crossienum;
 
 DOWN = 1, ACROSS = 2;
@@ -19,9 +24,6 @@ function runCrossie() {
 	if (loadLocalStorageValues()) {
 		renderPage();
 	}
-	else {
-		$.ajax({url: '/api/v1/getcrossie', success: getCrossieDataCallback});
-	}
 }
 
 function getCrossieDataCallback(data) {
@@ -31,6 +33,19 @@ function getCrossieDataCallback(data) {
 	matrix = data.matrix;
 	startpos = data.startpos;
 	crossienum = data.crossienum;
+
+	if (loadLocalStorageValues()) {
+		renderPage();
+	}
+}
+
+function getCrossieListCallback(data) {
+	console.log("Starting");
+	crossielist = {};
+	crossielist.list = data.list;
+	crossielist.lastupdated = data.lastupdated;
+	localStorage.setItem('crossielist', JSON.stringify(crossielist));
+	console.log("Done");
 
 	if (loadLocalStorageValues()) {
 		renderPage();
@@ -76,20 +91,23 @@ function showHeader() {
 	var select = $('<select>');
 	$(select).addClass('selectbox');
 	$(header).append(select);
-	for (var crossie in crossielist) {
+	for (var i = 0; i < crossielist.list.length; i ++) {
 		var option = $('<option>');
-		$(option).attr('value', crossie).text(crossie);
+		$(option).attr('value', crossielist.list[i].crossienum).text(crossielist.list[i].crossienum);
 
-		if (crossienum == crossie) {
+		if (crossienum == crossielist.list[i].crossienum) {
 			$(option).attr('selected', 'true');
 		}
 
 		$(select).append(option);
 	}
 	$(select).change(switchCrossies);
-	var authr = $('<span>');
-	$(authr).addClass('authorspan').text('by ' + author);
-	$(header).append(authr);
+
+	if (author) {
+		var authr = $('<span>');
+		$(authr).addClass('authorspan').text('by ' + author);
+		$(header).append(authr);
+	}
 }
 
 function showTable() {
@@ -237,18 +255,21 @@ function showClues() {
 
 function loadLocalStorageValues() {
 	crossielist = JSON.parse(localStorage.getItem("crossielist")) || {};
+	if (! crossielist || ! crossielist.lastupdated || ! crossielist.list) {
+		$.ajax({url: '/api/v1/getcrossielist', success: getCrossieListCallback});
+		return 0;
+	}
+
 	if (! crossienum) {
 		crossienum = JSON.parse(localStorage.getItem("currentcrossie")) || null;
 		if (! crossienum) {
-			for (var crssie in crossielist) {
-				crossienum = crssie;
-				break;
-			}
+			crossienum = crossielist.list[crossielist.list.length - 1].crossienum;
 		}
 	}
 
 	if (! crossienum) {
-		// No crossie loaded.. Stop and try loading a list..
+		// FIXME: No crossielist loaded. This should never have happened.
+		alert("Uh.. This should not have happened..");
 		return 0;
 	}
 	localStorage.setItem('currentcrossie', crossienum);
@@ -256,7 +277,11 @@ function loadLocalStorageValues() {
 	characters = JSON.parse(localStorage.getItem(crossienum)) || {};
 	var crossie = JSON.parse(localStorage.getItem(crossienum + "crossie")) || null;
 	if (! crossie) {
-		saveCrossie();
+		if (! saveCrossie()) {
+			// No data to save crossie => need to load data from server.
+			$.ajax({url: '/api/v1/getcrossie', success: getCrossieDataCallback});
+			return 0;
+		}
 	}
 	else {
 		across = crossie.across || across;
@@ -274,12 +299,11 @@ function loadLocalStorageValues() {
 }
 
 function saveCrossie() {
-	if (! (across && down && matrix && startpos && author && currentdbversion))
-		return;
+	if (! (across && down && matrix.length && startpos.length))
+		return 0;
 	var crossie = {across: across, down: down, matrix: matrix, startpos: startpos, author: author, dbversion: currentdbversion};
 	localStorage.setItem(crossienum + "crossie", JSON.stringify(crossie));
-	crossielist[crossienum] = 1;
-	localStorage.setItem('crossielist', JSON.stringify(crossielist));
+	return 1;
 }
 
 function saveLocalStorageValues() {
@@ -344,6 +368,8 @@ function handleClueClick() {
 
 function switchCrossies() {
 	crossienum = $(this).val();
-	localStorage.setItem('currentcrossie', crossienum);
-	runCrossie();
+	author = null;
+	across = down = startpos = matrix = {};
+	if (loadLocalStorageValues())
+		runCrossie();
 }
