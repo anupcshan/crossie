@@ -281,7 +281,12 @@ function loadLocalStorageValues() {
 	if (! crossie) {
 		if (! saveCrossie()) {
 			// No data to save crossie => need to load data from server.
-			$.ajax({url: '/api/v1/getcrossie', success: getCrossieDataCallback});
+			if (crossiedate) {
+				$.ajax({url: '/api/v1/getcrossie', data: {'date': crossiedate}, success: getCrossieDataCallback});
+			}
+			else {
+				$.ajax({url: '/api/v1/getcrossie', success: getCrossieDataCallback});
+			}
 			return 0;
 		}
 	}

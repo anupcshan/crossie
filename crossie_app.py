@@ -181,10 +181,17 @@ def getmetadatafromDS(year, month, day):
 class GetCrossie(webapp.RequestHandler):
 	def get(self):
 		self.response.headers['Content-Type'] = 'application/json'
-		today = datetime.datetime.today()
-		year = today.year
-		month = today.month
-		day = today.day
+		dt = self.request.get('date')
+		if dt is not None and len(dt) != 0:
+			year, month, day = self.request.get('date').split('-')
+			year = int(year)
+			month = int(month)
+			day = int(day)
+		else:
+			today = datetime.datetime.today()
+			year = today.year
+			month = today.month
+			day = today.day
 
 		metadata = getmetadatafromDS(year, month, day)
 		if metadata is None:
