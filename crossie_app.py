@@ -205,7 +205,8 @@ class GetCrossieList(webapp.RequestHandler):
 		q = CrossieMetaData.all()
 		since = self.request.get('since')
 		if since is not None and len(since) != 0:
-			since = datetime.datetime.strptime(since, '%Y-%m-%d %H:%M:%S.%f')
+			since, temp = since.split('.')
+			since = datetime.datetime.strptime(since, '%Y-%m-%d %H:%M:%S')
 			q.filter('updated >=', since)
 
 		list = []
