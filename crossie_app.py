@@ -203,6 +203,11 @@ class GetCrossieList(webapp.RequestHandler):
 	def get(self):
 		self.response.headers['Content-Type'] = 'application/json'
 		q = CrossieMetaData.all()
+		since = self.request.get('since')
+		if since is not None and len(since) != 0:
+			since = datetime.datetime.strptime(since, '%Y-%m-%d %H:%M:%S.%f')
+			q.filter('updated >=', since)
+
 		list = []
 
 		for md in q:

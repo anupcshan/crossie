@@ -22,6 +22,7 @@ function runCrossie() {
 	}
 //	alert("And... We're good to go!");
 
+	loadAndUpdateCrossieList();
 	if (loadLocalStorageValues()) {
 		renderPage();
 	}
@@ -41,13 +42,28 @@ function getCrossieDataCallback(data) {
 	}
 }
 
+function sortCrossieList() {
+	// FIXME: Optimise this.
+	var temp = null;
+	var list = crossielist.list;
+	for (var i = 0; i < list.length; i ++) {
+		for (var j = 0; j < list.length; j ++) {
+			if (list[i].date < list[j].date) {
+				temp = list[i];
+				list[i] = list[j];
+				list[j] = temp;
+			}
+		}
+	}
+}
+
 function getCrossieListCallback(data) {
-	console.log("Starting");
-	crossielist = {};
-	crossielist.list = data.list;
+	if (! crossielist.list)
+		crossielist.list = []
+	crossielist.list = crossielist.list.concat(data.list);
+	sortCrossieList();
 	crossielist.lastupdated = data.lastupdated;
 	localStorage.setItem('crossielist', JSON.stringify(crossielist));
-	console.log("Done");
 
 	if (loadLocalStorageValues()) {
 		renderPage();
@@ -255,12 +271,19 @@ function showClues() {
 	$('.clue').click(handleClueClick);
 }
 
-function loadLocalStorageValues() {
+function loadAndUpdateCrossieList() {
 	crossielist = JSON.parse(localStorage.getItem("crossielist")) || {};
 	if (! crossielist || ! crossielist.lastupdated || ! crossielist.list) {
 		$.ajax({url: '/api/v1/getcrossielist', success: getCrossieListCallback});
-		return 0;
 	}
+	else if (crossielist && crossielist.lastupdated) {
+		$.ajax({url: '/api/v1/getcrossielist', data: {'since': crossielist.lastupdated}, success: getCrossieListCallback});
+	}
+}
+
+function loadLocalStorageValues() {
+	if (! crossielist || ! crossielist.list)
+		return 0;
 
 	if (! crossienum) {
 		crossienum = JSON.parse(localStorage.getItem("currentcrossie")) || null;
