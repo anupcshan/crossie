@@ -403,3 +403,11 @@ function switchCrossies() {
 	across = down = startpos = matrix = {};
 	runCrossie();
 }
+
+function activateLightbox() {
+	$("#lightbox").addClass('lightbox');
+}
+
+function deactivateLightbox() {
+	$("#lightbox").removeClass('lightbox');
+}
