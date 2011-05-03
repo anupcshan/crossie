@@ -374,17 +374,43 @@ function getCrosswordDivXY(arr) {
 	return $($('td')[arr[0]*15 + arr[1]]).children();
 }
 
-function handleKeyUp() {
+function handleKeyUp(evt) {
+	var keypressed = String.fromCharCode(evt.keyCode);
+
+	// Ignore everything except a-z, A-Z and arrow keys.
+	if (! ((keypressed >= 'a' && keypressed <= 'z') || (keypressed >= 'A' && keypressed <= 'Z') || (evt.keyCode >= 37 && evt.keyCode <= 40)))
+		return;
+
 	$(this).blur();
 	var parnt = $(this).parent();
 	var x = $(parnt).data('x');
 	var y = $(parnt).data('y');
 	var arr = [x, y];
-	if (dirn == 'across') {
-		arr[1] ++;
-	}
-	else {
-		arr[0] ++;
+
+	switch (evt.keyCode) {
+		case 37:
+			// Left arrow
+			arr[1] --;
+			break;
+		case 38:
+			// Up arrow
+			arr[0] --;
+			break;
+		case 39:
+			// Right arrow
+			arr[1] ++;
+			break;
+		case 40:
+			// Down arrow
+			arr[0] ++;
+			break;
+		default:
+			if (dirn == 'across') {
+				arr[1] ++;
+			}
+			else {
+				arr[0] ++;
+			}
 	}
 	getCrosswordDivXY(arr).click();
 }
