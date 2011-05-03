@@ -4,6 +4,7 @@ from google.appengine.api.images import *
 from google.appengine.ext import db
 from google.appengine.api import memcache
 from google.appengine.ext import webapp
+from google.appengine.api import users
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 import sys
@@ -13,6 +14,17 @@ import datetime
 import png
 import StringIO
 import simplejson
+
+class CrossieData(db.Model):
+	crossienum = db.IntegerProperty(required=True)
+	acl = db.ListProperty(users.User, required=True)
+	characters = db.StringListProperty(required=True)
+	version = db.IntegerProperty(required=True)
+
+class UserCrossie(db.Model):
+	crossienum = db.IntegerProperty(required=True)
+	user = db.UserProperty(required=True)
+	crossiedata = db.ReferenceProperty(CrossieData, required=True)
 
 class CrossieMetaData(db.Model):
 	crossienum = db.IntegerProperty(required=True)
@@ -217,7 +229,31 @@ class GetCrossieList(webapp.RequestHandler):
 		crossielist = {'list': list, 'lastupdated': datetime.datetime.now().__str__()}
 		self.response.out.write(simplejson.dumps(crossielist))
 
-application = webapp.WSGIApplication([('/api/v1/getcrossie', GetCrossie), ('/api/v1/getcrossielist', GetCrossieList)])
+class GetCrossieId(webapp.RequestHandler):
+	def get(self):
+		self.response.headers['Content-Type'] = 'application/json'
+		crossienum = self.request.get('crossienum')
+		if crossienum is None or len(crossienum) == 0:
+			# Cannot proceed
+			self.response.out.write(simplejson.dumps({'error': 'Crossienum not specified.'}))
+			return
+
+		crossienum = int(crossienum)
+		user = users.get_current_user()
+		q = UserCrossie.all()
+		q.filter('user', user)
+		q.filter('crossienum', crossienum)
+		usercrossie = q.get()
+
+		if usercrossie is None:
+			# FIXME: No transaction model used here.
+			crossiedata = CrossieData(version=1, crossienum=crossienum, acl=[user])
+			crossiedata.put()
+			usercrossie = UserCrossie(crossienum=crossienum, user=user, crossiedata=crossiedata)
+			usercrossie.put()
+		self.response.out.write({'crossieid': usercrossie.crossiedata.key().id()})
+
+application = webapp.WSGIApplication([('/api/v1/getcrossie', GetCrossie), ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/getcrossieid', GetCrossieId)])
 
 if __name__ == "__main__":
 	run_wsgi_app(application)
