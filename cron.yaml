@@ -1,0 +1,5 @@
+cron:
+- description: Download daily crossie
+  url: /api/v1/getcrossie
+  schedule: every day 06:00
+  timezone: Asia/Kolkata
