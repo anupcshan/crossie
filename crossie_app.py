@@ -170,9 +170,9 @@ def getmetadatafromDS(year, month, day):
 
 	q = CrossieMetaData.all()
 	q.filter("date", date)
-	results = q.fetch(1)
+	md = q.get()
 
-	for md in results:
+	if md is not None:
 		memcache.add(date.__str__(), md.metadata)
 		return md.metadata
 
