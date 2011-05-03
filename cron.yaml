@@ -1,5 +1,5 @@
 cron:
 - description: Download daily crossie
-  url: /api/v1/getcrossie
+  url: /api/v1/getcrossiemetadata
   schedule: every day 06:00
   timezone: Asia/Kolkata

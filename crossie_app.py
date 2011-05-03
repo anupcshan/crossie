@@ -190,7 +190,7 @@ def getmetadatafromDS(year, month, day):
 
     return None
 
-class GetCrossie(webapp.RequestHandler):
+class GetCrossieMetaData(webapp.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'application/json'
         dt = self.request.get('date')
@@ -253,7 +253,8 @@ class GetCrossieId(webapp.RequestHandler):
             usercrossie.put()
         self.response.out.write({'crossieid': usercrossie.crossiedata.key().id()})
 
-application = webapp.WSGIApplication([('/api/v1/getcrossie', GetCrossie), ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/getcrossieid', GetCrossieId)])
+application = webapp.WSGIApplication([('/api/v1/getcrossiemetadata', GetCrossieMetaData),
+        ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/getcrossieid', GetCrossieId)])
 
 if __name__ == "__main__":
     run_wsgi_app(application)
