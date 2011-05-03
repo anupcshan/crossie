@@ -106,3 +106,10 @@ table {
 	position: absolute;
 	opacity: 0.50;
 }
+
+.betatag {
+    font-weight: normal;
+    font-size: 11pt;
+    vertical-align: super;
+    margin-left: 5px;
+}

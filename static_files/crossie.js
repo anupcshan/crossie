@@ -105,6 +105,11 @@ function showHeader() {
 	var cnumspan = $('<span>');
 	$(cnumspan).text('The Hindu Crossword ' + crossienum);
 	$(header).append(cnumspan);
+
+    var betatag = $('<span>');
+    $(betatag).text('Beta').addClass('betatag');
+    $(header).append(betatag);
+
 	var select = $('<select>');
 	$(select).addClass('selectbox');
 	$(header).append(select);
