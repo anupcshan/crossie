@@ -21,6 +21,9 @@ class CrossieData(db.Model):
     characters = db.StringListProperty(required=True)
     version = db.IntegerProperty(required=True)
 
+    def getJSON(self):
+        return simplejson.dumps({'crossienum': self.crossienum, 'characters': self.characters, 'version': self.version})
+
 class UserCrossie(db.Model):
     crossienum = db.IntegerProperty(required=True)
     user = db.UserProperty(required=True)
@@ -251,10 +254,33 @@ class GetCrossieId(webapp.RequestHandler):
             crossiedata.put()
             usercrossie = UserCrossie(crossienum=crossienum, user=user, crossiedata=crossiedata)
             usercrossie.put()
-        self.response.out.write({'crossieid': usercrossie.crossiedata.key().id()})
+        self.response.out.write(simplejson.dumps({'crossieid': usercrossie.crossiedata.key().id()}))
+
+class Crossie(webapp.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
+
+        # FIXME: Add option to list crossie by crossienum instead.
+        crossieid = self.request.get('crossieid')
+        if crossieid is None or len(crossieid) == 0:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'Crossieid not specified.'}))
+            return
+
+        crossieid = long(crossieid)
+        crossiedata = CrossieData.get_by_id(crossieid)
+        if crossiedata is None:
+            # Cannot proceed
+            # FIXME: Automatically create crossie if possible.
+            self.response.out.write(simplejson.dumps({'error': 'Crossie data not found.'}))
+            return
+
+        # FIXME: Check ACL before returning result.
+        self.response.out.write(crossiedata.getJSON())
 
 application = webapp.WSGIApplication([('/api/v1/getcrossiemetadata', GetCrossieMetaData),
-        ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/getcrossieid', GetCrossieId)])
+        ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/getcrossieid', GetCrossieId),
+        ('/api/v1/crossie', Crossie)])
 
 if __name__ == "__main__":
     run_wsgi_app(application)
