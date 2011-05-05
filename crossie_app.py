@@ -15,6 +15,12 @@ import png
 import StringIO
 import simplejson
 
+class PermissionDeniedException(Exception):
+    pass
+
+class NoSuchCrossieException(Exception):
+    pass
+
 class CrossieData(db.Model):
     crossienum = db.IntegerProperty(required=True)
     acl = db.ListProperty(users.User, required=True)
@@ -22,7 +28,40 @@ class CrossieData(db.Model):
     version = db.IntegerProperty(required=True)
 
     def getJSON(self):
-        return simplejson.dumps({'crossienum': self.crossienum, 'characters': self.characters, 'version': self.version, 'crossieid': self.key().id()})
+        return simplejson.dumps({'crossienum': self.crossienum, 'characters': self.getCharacters(), 'version': self.version, 'crossieid': self.key().id()})
+
+    def getCharacters(self):
+        list = {}
+        for i in range(0, len(self.characters)):
+            if self.characters[i] != '':
+                x, y = divmod(i, 15)
+                list[x.__str__() + ',' + y.__str__()] = self.characters[i]
+        return list
+
+    @staticmethod
+    def getAndUpdateCrossie(crossieid, user, updates):
+        crossiedata = CrossieData.get_by_id(crossieid)
+        if crossiedata is None:
+            # Cannot proceed
+            raise NoSuchCrossieException
+
+        if user not in crossiedata.acl:
+            raise PermissionDeniedException
+
+        if len(crossiedata.characters) == 0:
+            # Populate 15x15 characters with blanks.
+            for i in range(0, 225):
+                crossiedata.characters.append('')
+
+        for update in updates:
+            pos = update['pos'].split(',')
+            intpos = int(pos[0])*15 + int(pos[1])
+            char = update['char']
+            crossiedata.characters[intpos] = char
+
+        crossiedata.version += 1
+        crossiedata.put()
+        return crossiedata
 
 class UserCrossie(db.Model):
     crossienum = db.IntegerProperty(required=True)
@@ -296,6 +335,39 @@ class Crossie(webapp.RequestHandler):
             return
 
         self.response.out.write(crossiedata.getJSON())
+
+    def post(self):
+        self.response.headers['Content-Type'] = 'application/json'
+
+        user = users.get_current_user()
+        crossieid = self.request.get('crossieid')
+        if crossieid is None or len(crossieid) == 0:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'Crossieid should specified.'}))
+            return
+
+        crossieid = long(crossieid)
+        crossiedata = None
+
+        updates = self.request.get('updates')
+        if updates is None or len(updates) == 0:
+            updates = []
+        else:
+            updates = simplejson.loads(updates)
+
+        try:
+            crossiedata = db.run_in_transaction(CrossieData.getAndUpdateCrossie, crossieid, user, updates)
+        except NoSuchCrossieException:
+            self.response.out.write(simplejson.dumps({'error': 'Crossie data not found.'}))
+            return
+        except PermissionDeniedException:
+            self.response.out.write(simplejson.dumps({'error': 'Permission denied.'}))
+            return
+        except db.TransactionFailedError:
+            self.response.out.write(simplejson.dumps({'error': 'DB error. Try again.'}))
+
+        if crossiedata is not None:
+            self.response.out.write(crossiedata.getJSON())
 
 application = webapp.WSGIApplication([('/api/v1/getcrossiemetadata', GetCrossieMetaData),
         ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/getcrossieid', GetCrossieId),
