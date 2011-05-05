@@ -22,7 +22,7 @@ class CrossieData(db.Model):
     version = db.IntegerProperty(required=True)
 
     def getJSON(self):
-        return simplejson.dumps({'crossienum': self.crossienum, 'characters': self.characters, 'version': self.version})
+        return simplejson.dumps({'crossienum': self.crossienum, 'characters': self.characters, 'version': self.version, 'crossieid': self.key().id()})
 
 class UserCrossie(db.Model):
     crossienum = db.IntegerProperty(required=True)
@@ -260,22 +260,41 @@ class Crossie(webapp.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'application/json'
 
-        # FIXME: Add option to list crossie by crossienum instead.
+        user = users.get_current_user()
+        crossienum = self.request.get('crossienum')
+        if crossienum is not None and len(crossienum) != 0:
+            crossienum = int(crossienum)
+            q = UserCrossie.all()
+            q.filter('user', user)
+            q.filter('crossienum', crossienum)
+            usercrossie = q.get()
+
+            if usercrossie is None:
+                # FIXME: No transaction model used here.
+                crossiedata = CrossieData(version=1, crossienum=crossienum, acl=[user])
+                crossiedata.put()
+                usercrossie = UserCrossie(crossienum=crossienum, user=user, crossiedata=crossiedata)
+                usercrossie.put()
+            self.response.out.write(usercrossie.crossiedata.getJSON())
+            return
+
         crossieid = self.request.get('crossieid')
         if crossieid is None or len(crossieid) == 0:
             # Cannot proceed
-            self.response.out.write(simplejson.dumps({'error': 'Crossieid not specified.'}))
+            self.response.out.write(simplejson.dumps({'error': 'Either crossieid or crossienum should specified.'}))
             return
 
         crossieid = long(crossieid)
         crossiedata = CrossieData.get_by_id(crossieid)
         if crossiedata is None:
             # Cannot proceed
-            # FIXME: Automatically create crossie if possible.
             self.response.out.write(simplejson.dumps({'error': 'Crossie data not found.'}))
             return
 
-        # FIXME: Check ACL before returning result.
+        if user not in crossiedata.acl:
+            self.response.out.write(simplejson.dumps({'error': 'Permission denied.'}))
+            return
+
         self.response.out.write(crossiedata.getJSON())
 
 application = webapp.WSGIApplication([('/api/v1/getcrossiemetadata', GetCrossieMetaData),
