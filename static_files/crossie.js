@@ -11,6 +11,7 @@ author = null;
 crossiedate = null;
 var crossienum;
 pendingupdates = {};
+var initialupdate;
 
 DOWN = 1, ACROSS = 2;
 
@@ -22,9 +23,9 @@ function startup() {
         return;
     }
 
-    loadPendingUpdates();
     loadAndUpdateCrossieList();
     runCrossie();
+    loadPendingUpdates();
     setInterval(clearPendingUpdates, 10000);
 }
 
@@ -467,7 +468,7 @@ function clearPendingUpdates() {
             updates.push({'pos': posn, 'char': pendingupdates[cnum][posn]});
         }
         $.ajax({url: '/api/v1/crossie', data: {crossienum: cnum, updates: JSON.stringify(updates)},
-                success: function() { delete pendingupdates[cnum]; savePendingUpdates(); }, type: 'POST'});
+                success: function(data) { delete pendingupdates[data.crossienum]; savePendingUpdates(); }, type: 'POST'});
     }
 
     this.running = 0;
@@ -483,6 +484,20 @@ function addPendingUpdate(crossienum, posn, chr) {
 
 function loadPendingUpdates() {
     pendingupdates = JSON.parse(localStorage.getItem('pendingupdates')) || {};
+    if (! localStorage.getItem('initialupdate')) {
+        // No updates have been run so far..
+        // Sync all characters from all local crossies..
+        for (var i = 0; i < crossielist.list.length; i ++) {
+            var cnum = crossielist.list[i].crossienum;
+            var chrs = JSON.parse(localStorage.getItem(crossienum)) || {};
+            for (var posn in chrs) {
+                if (chrs[posn] != '')
+                    addPendingUpdate(cnum, posn, chrs[posn]);
+            }
+        }
+
+        localStorage.setItem('initialupdate', 1);
+    }
 }
 
 function savePendingUpdates() {
