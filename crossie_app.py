@@ -269,30 +269,6 @@ class GetCrossieList(webapp.RequestHandler):
         crossielist = {'list': list, 'lastupdated': datetime.datetime.now().__str__()}
         self.response.out.write(simplejson.dumps(crossielist))
 
-class GetCrossieId(webapp.RequestHandler):
-    def get(self):
-        self.response.headers['Content-Type'] = 'application/json'
-        crossienum = self.request.get('crossienum')
-        if crossienum is None or len(crossienum) == 0:
-            # Cannot proceed
-            self.response.out.write(simplejson.dumps({'error': 'Crossienum not specified.'}))
-            return
-
-        crossienum = int(crossienum)
-        user = users.get_current_user()
-        q = UserCrossie.all()
-        q.filter('user', user)
-        q.filter('crossienum', crossienum)
-        usercrossie = q.get()
-
-        if usercrossie is None:
-            # FIXME: No transaction model used here.
-            crossiedata = CrossieData(crossienum=crossienum, acl=[user])
-            crossiedata.put()
-            usercrossie = UserCrossie(crossienum=crossienum, user=user, crossiedata=crossiedata)
-            usercrossie.put()
-        self.response.out.write(simplejson.dumps({'crossieid': usercrossie.crossiedata.key().id()}))
-
 class Crossie(webapp.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'application/json'
@@ -312,40 +288,37 @@ class Crossie(webapp.RequestHandler):
                 crossiedata.put()
                 usercrossie = UserCrossie(crossienum=crossienum, user=user, crossiedata=crossiedata)
                 usercrossie.put()
+
             self.response.out.write(usercrossie.crossiedata.getJSON())
             return
-
-        crossieid = self.request.get('crossieid')
-        if crossieid is None or len(crossieid) == 0:
-            # Cannot proceed
-            self.response.out.write(simplejson.dumps({'error': 'Either crossieid or crossienum should specified.'}))
-            return
-
-        crossieid = long(crossieid)
-        crossiedata = CrossieData.get_by_id(crossieid)
-        if crossiedata is None:
-            # Cannot proceed
-            self.response.out.write(simplejson.dumps({'error': 'Crossie data not found.'}))
-            return
-
-        if user not in crossiedata.acl:
-            self.response.out.write(simplejson.dumps({'error': 'Permission denied.'}))
-            return
-
-        self.response.out.write(crossiedata.getJSON())
+        else:
+            self.response.out.write(simplejson.dumps({'error': 'Crossienum should specified.'}))
 
     def post(self):
         self.response.headers['Content-Type'] = 'application/json'
 
         user = users.get_current_user()
-        crossieid = self.request.get('crossieid')
-        if crossieid is None or len(crossieid) == 0:
+        crossienum = self.request.get('crossienum')
+        if crossienum is None or len(crossienum) == 0:
             # Cannot proceed
-            self.response.out.write(simplejson.dumps({'error': 'Crossieid should specified.'}))
+            self.response.out.write(simplejson.dumps({'error': 'Crossienum should specified.'}))
             return
 
-        crossieid = long(crossieid)
+        crossienum = int(crossienum)
         crossiedata = None
+        q = UserCrossie.all()
+        q.filter('user', user)
+        q.filter('crossienum', crossienum)
+        usercrossie = q.get()
+
+        if usercrossie is None:
+            # FIXME: No transaction model used here.
+            crossiedata = CrossieData(crossienum=crossienum, acl=[user])
+            crossiedata.put()
+            usercrossie = UserCrossie(crossienum=crossienum, user=user, crossiedata=crossiedata)
+            usercrossie.put()
+
+        crossieid = usercrossie.crossiedata.key().id()
 
         updates = self.request.get('updates')
         if updates is None or len(updates) == 0:
@@ -368,8 +341,7 @@ class Crossie(webapp.RequestHandler):
             self.response.out.write(crossiedata.getJSON())
 
 application = webapp.WSGIApplication([('/api/v1/getcrossiemetadata', GetCrossieMetaData),
-        ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/getcrossieid', GetCrossieId),
-        ('/api/v1/crossie', Crossie)])
+        ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/crossie', Crossie)])
 
 if __name__ == "__main__":
     run_wsgi_app(application)
