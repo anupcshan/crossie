@@ -10,6 +10,7 @@ startpos = {};
 author = null;
 crossiedate = null;
 var crossienum;
+pendingupdates = {};
 
 DOWN = 1, ACROSS = 2;
 
@@ -21,8 +22,10 @@ function startup() {
         return;
     }
 
+    loadPendingUpdates();
     loadAndUpdateCrossieList();
     runCrossie();
+    setInterval(clearPendingUpdates, 10000);
 }
 
 function runCrossie() {
@@ -200,6 +203,7 @@ function showTable() {
     $('.not-blacked-out').click(handleClick);
     $('.characterinput').blur(handleBlur);
     $('.characterinput').keyup(handleKeyUp);
+    $('.characterinput').change(handleChange);
 }
 
 function recalcClueCompletion(cluenum, dirn) {
@@ -420,6 +424,14 @@ function handleKeyUp(evt) {
     getCrosswordDivXY(arr).click();
 }
 
+function handleChange(evt) {
+    var parnt = $(this).parent();
+    var x = $(parnt).data('x');
+    var y = $(parnt).data('y');
+    var arr = [x, y];
+    addPendingUpdate(crossienum, arr, $(this).val());
+}
+
 function handleClueClick() {
     var cluemeta = $(this).data('cluemeta');
     var cluenum = cluemeta.cluenum;
@@ -441,4 +453,38 @@ function activateLightbox() {
 
 function deactivateLightbox() {
     $("#lightbox").removeClass('lightbox');
+}
+
+function clearPendingUpdates() {
+    if (this.running && this.running == 1)
+        return;
+
+    this.running = 1;
+
+    for (var cnum in pendingupdates) {
+        var updates = [];
+        for (posn in pendingupdates[cnum]) {
+            updates.push({'pos': posn, 'char': pendingupdates[cnum][posn]});
+        }
+        $.ajax({url: '/api/v1/crossie', data: {crossienum: cnum, updates: JSON.stringify(updates)},
+                success: function() { delete pendingupdates[cnum]; savePendingUpdates(); }, type: 'POST'});
+    }
+
+    this.running = 0;
+}
+
+function addPendingUpdate(crossienum, posn, chr) {
+    if (pendingupdates[crossienum] == undefined)
+        pendingupdates[crossienum] = {};
+
+    pendingupdates[crossienum][posn] = chr;
+    savePendingUpdates();
+}
+
+function loadPendingUpdates() {
+    pendingupdates = JSON.parse(localStorage.getItem('pendingupdates')) || {};
+}
+
+function savePendingUpdates() {
+    localStorage.setItem('pendingupdates', JSON.stringify(pendingupdates));
 }
