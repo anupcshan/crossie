@@ -25,10 +25,9 @@ class CrossieData(db.Model):
     crossienum = db.IntegerProperty(required=True)
     acl = db.ListProperty(users.User, required=True)
     characters = db.StringListProperty(required=True)
-    version = db.IntegerProperty(required=True)
 
     def getJSON(self):
-        return simplejson.dumps({'crossienum': self.crossienum, 'characters': self.getCharacters(), 'version': self.version, 'crossieid': self.key().id()})
+        return simplejson.dumps({'crossienum': self.crossienum, 'characters': self.getCharacters(), 'crossieid': self.key().id()})
 
     def getCharacters(self):
         list = {}
@@ -59,7 +58,6 @@ class CrossieData(db.Model):
             char = update['char']
             crossiedata.characters[intpos] = char
 
-        crossiedata.version += 1
         crossiedata.put()
         return crossiedata
 
@@ -289,7 +287,7 @@ class GetCrossieId(webapp.RequestHandler):
 
         if usercrossie is None:
             # FIXME: No transaction model used here.
-            crossiedata = CrossieData(version=1, crossienum=crossienum, acl=[user])
+            crossiedata = CrossieData(crossienum=crossienum, acl=[user])
             crossiedata.put()
             usercrossie = UserCrossie(crossienum=crossienum, user=user, crossiedata=crossiedata)
             usercrossie.put()
@@ -310,7 +308,7 @@ class Crossie(webapp.RequestHandler):
 
             if usercrossie is None:
                 # FIXME: No transaction model used here.
-                crossiedata = CrossieData(version=1, crossienum=crossienum, acl=[user])
+                crossiedata = CrossieData(crossienum=crossienum, acl=[user])
                 crossiedata.put()
                 usercrossie = UserCrossie(crossienum=crossienum, user=user, crossiedata=crossiedata)
                 usercrossie.put()
