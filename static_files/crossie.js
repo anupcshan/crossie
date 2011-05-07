@@ -22,10 +22,10 @@ function startup() {
         return;
     }
 
-    loadAndUpdateCrossieList();
-    runCrossie();
     loadPendingUpdates();
     setInterval(clearPendingUpdates, 10000);
+    if (loadAndUpdateCrossieList())
+        runCrossie();
 }
 
 function runCrossie() {
@@ -92,14 +92,15 @@ function sortCrossieList() {
     }
 }
 
-function getCrossieListCallback(data) {
+function getCrossieListCallback(data, norender) {
     if (! crossielist.list)
         crossielist.list = []
     crossielist.list = crossielist.list.concat(data.list);
     sortCrossieList();
     crossielist.lastupdated = data.lastupdated;
     localStorage.setItem('crossielist', JSON.stringify(crossielist));
-    renderPage();
+    if (! norender)
+        renderPage();
 }
 
 function renderPage() {
@@ -312,10 +313,12 @@ function showClues() {
 function loadAndUpdateCrossieList() {
     crossielist = JSON.parse(localStorage.getItem("crossielist")) || {};
     if (! crossielist || ! crossielist.lastupdated || ! crossielist.list) {
-        $.ajax({url: '/api/v1/getcrossielist', success: getCrossieListCallback});
+        $.ajax({url: '/api/v1/getcrossielist', success: function(data) {getCrossieListCallback(data, true); runCrossie();}});
+        return 0;
     }
     else if (crossielist && crossielist.lastupdated) {
         $.ajax({url: '/api/v1/getcrossielist', data: {'since': crossielist.lastupdated}, success: getCrossieListCallback});
+        return 1;
     }
 }
 
