@@ -487,6 +487,8 @@ function loadPendingUpdates() {
     if (! localStorage.getItem('initialupdate')) {
         // No updates have been run so far..
         // Sync all characters from all local crossies..
+        if (! crossielist || ! crossielist.list || ! crossielist.list.length)
+            return;
         for (var i = 0; i < crossielist.list.length; i ++) {
             var cnum = crossielist.list[i].crossienum;
             var chrs = JSON.parse(localStorage.getItem(crossienum)) || {};
