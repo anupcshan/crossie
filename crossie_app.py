@@ -25,9 +25,13 @@ class CrossieData(db.Model):
     crossienum = db.IntegerProperty(required=True)
     acl = db.ListProperty(users.User, required=True)
     characters = db.StringListProperty(required=True)
+    updated = db.DateTimeProperty(required=True, auto_now=True)
 
     def getJSON(self):
-        return simplejson.dumps({'crossienum': self.crossienum, 'characters': self.getCharacters(), 'crossieid': self.key().id()})
+        return simplejson.dumps(self.getData())
+
+    def getData(self):
+        return {'crossienum': self.crossienum, 'characters': self.getCharacters(), 'crossieid': self.key().id(), 'updated': self.updated.__str__()}
 
     def getCharacters(self):
         list = {}
@@ -340,8 +344,30 @@ class Crossie(webapp.RequestHandler):
         if crossiedata is not None:
             self.response.out.write(crossiedata.getJSON())
 
+class CrossieUpdates(webapp.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
+
+        user = users.get_current_user()
+        since = self.request.get('since')
+        q = CrossieData.all()
+        if since is not None and len(since) != 0:
+            since, temp = since.split('.')
+            since = datetime.datetime.strptime(since, '%Y-%m-%d %H:%M:%S')
+            q.filter('updated >=', since)
+
+        crossies = []
+        for crossiedata in q:
+            if user in crossiedata.acl:
+                crossies.append(crossiedata)
+
+        # FIXME: Below is a *very nasty* hack to make JSONifying CrossieData
+        # work properly. Look away.
+        self.response.out.write(simplejson.dumps([crossie.getData() for crossie in crossies]))
+
 application = webapp.WSGIApplication([('/api/v1/getcrossiemetadata', GetCrossieMetaData),
-        ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/crossie', Crossie)])
+        ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/crossie', Crossie),
+        ('/api/v1/crossieupdates', CrossieUpdates)])
 
 if __name__ == "__main__":
     run_wsgi_app(application)
