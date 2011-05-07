@@ -46,6 +46,37 @@ function getCrossieMetaDataCallback(data) {
     runCrossie();
 }
 
+function getCrossieDataCallback(data) {
+    if (crossienum == data.crossienum) {
+        var needToReload = false;
+        for (var i in data.characters) {
+            if (data.characters[i] != characters[i]) {
+                characters[i] = data.characters[i];
+                needToReload = true;
+            }
+        }
+
+        if (needToReload) {
+            saveLocalStorageValues();
+            runCrossie();
+        }
+    }
+    else {
+        var needToRewrite = false;
+        var chrs = JSON.parse(localStorage.getItem(crossienum)) || {};
+        for (var i in data.characters) {
+            if (data.characters[i] != chrs[i]) {
+                chrs[i] = data.characters[i];
+                needToRewrite = true;
+            }
+        }
+
+        if (needToRewrite) {
+            localStorage.setItem(data.crossienum, JSON.stringify(chrs));
+        }
+    }
+}
+
 function sortCrossieList() {
     // FIXME: Optimise this.
     var temp = null;
@@ -68,8 +99,7 @@ function getCrossieListCallback(data) {
     sortCrossieList();
     crossielist.lastupdated = data.lastupdated;
     localStorage.setItem('crossielist', JSON.stringify(crossielist));
-
-    runCrossie();
+    renderPage();
 }
 
 function renderPage() {
@@ -332,6 +362,7 @@ function loadLocalStorageValues() {
         if (crossiedbversion != currentdbversion) {
             saveCrossie();
         }
+        $.ajax({url: '/api/v1/crossie', data: {'crossienum': crossienum}, success: getCrossieDataCallback});
     }
 
     return 1;
