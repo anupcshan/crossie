@@ -11,7 +11,6 @@ author = null;
 crossiedate = null;
 var crossienum;
 pendingupdates = {};
-var initialupdate;
 
 DOWN = 1, ACROSS = 2;
 
@@ -468,37 +467,40 @@ function clearPendingUpdates() {
             updates.push({'pos': posn, 'char': pendingupdates[cnum][posn]});
         }
         $.ajax({url: '/api/v1/crossie', data: {crossienum: cnum, updates: JSON.stringify(updates)},
-                success: function(data) { delete pendingupdates[data.crossienum]; savePendingUpdates(); }, type: 'POST'});
+                success: function(data) {
+                    delete pendingupdates[data.crossienum];
+                    savePendingUpdates();
+                }, type: 'POST'});
     }
 
     this.running = 0;
 }
 
-function addPendingUpdate(crossienum, posn, chr) {
-    if (pendingupdates[crossienum] == undefined)
-        pendingupdates[crossienum] = {};
+function addPendingUpdate(cnum, posn, chr) {
+    if (pendingupdates[cnum] == undefined)
+        pendingupdates[cnum] = {};
 
-    pendingupdates[crossienum][posn] = chr;
+    pendingupdates[cnum][posn] = chr;
     savePendingUpdates();
 }
 
 function loadPendingUpdates() {
     pendingupdates = JSON.parse(localStorage.getItem('pendingupdates')) || {};
-    if (! localStorage.getItem('initialupdate')) {
+    if (! localStorage.getItem('initialupdate2')) {
         // No updates have been run so far..
         // Sync all characters from all local crossies..
         if (! crossielist || ! crossielist.list || ! crossielist.list.length)
             return;
         for (var i = 0; i < crossielist.list.length; i ++) {
             var cnum = crossielist.list[i].crossienum;
-            var chrs = JSON.parse(localStorage.getItem(crossienum)) || {};
+            var chrs = JSON.parse(localStorage.getItem(cnum)) || {};
             for (var posn in chrs) {
                 if (chrs[posn] != '')
                     addPendingUpdate(cnum, posn, chrs[posn]);
             }
         }
 
-        localStorage.setItem('initialupdate', 1);
+        localStorage.setItem('initialupdate2', 1);
     }
 }
 
