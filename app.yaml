@@ -8,12 +8,12 @@ default_expiration: "7d"
 handlers:
 - url: /api/v1/.*
   script: crossie_app.py
-  login: admin
+  login: required
 
 - url: /
   static_files: index.html
   upload: index.html
-  login: admin
+  login: required
 
 - url: /favicon.ico
   static_files: static_files/favicon.ico
@@ -21,4 +21,4 @@ handlers:
 
 - url: /static_files
   static_dir: static_files
-  login: admin
+  login: required
