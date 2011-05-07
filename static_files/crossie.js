@@ -34,7 +34,7 @@ function runCrossie() {
     }
 }
 
-function getCrossieDataCallback(data) {
+function getCrossieMetaDataCallback(data) {
     across = data.across;
     author = data.author;
     down = data.down;
@@ -313,10 +313,10 @@ function loadLocalStorageValues() {
         if (! saveCrossie()) {
             // No data to save crossie => need to load data from server.
             if (crossiedate) {
-                $.ajax({url: '/api/v1/getcrossiemetadata', data: {'date': crossiedate}, success: getCrossieDataCallback});
+                $.ajax({url: '/api/v1/getcrossiemetadata', data: {'date': crossiedate}, success: getCrossieMetaDataCallback});
             }
             else {
-                $.ajax({url: '/api/v1/getcrossiemetadata', success: getCrossieDataCallback});
+                $.ajax({url: '/api/v1/getcrossiemetadata', success: getCrossieMetaDataCallback});
             }
             return 0;
         }
