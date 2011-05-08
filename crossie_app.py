@@ -5,6 +5,7 @@ from google.appengine.ext import db
 from google.appengine.api import memcache
 from google.appengine.ext import webapp
 from google.appengine.api import users
+from google.appengine.api import channel
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 import sys
@@ -343,6 +344,13 @@ class Crossie(webapp.RequestHandler):
 
         if crossiedata is not None:
             self.response.out.write(crossiedata.getJSON())
+            for usr in crossiedata.acl:
+                if usr != user:
+                    try:
+                        channel.send_message(usr.user_id(), simplejson.dumps({'updates': updates, 'crossienum': crossienum}))
+                    except:
+                        # Does not matter if all collabs don't get the message
+                        pass
 
 class CrossieUpdates(webapp.RequestHandler):
     def get(self):
@@ -365,9 +373,17 @@ class CrossieUpdates(webapp.RequestHandler):
         # work properly. Look away.
         self.response.out.write(simplejson.dumps([crossie.getData() for crossie in crossies]))
 
+class Channel(webapp.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
+
+        user = users.get_current_user()
+        token = channel.create_channel(user.user_id())
+        self.response.out.write(simplejson.dumps({'token': token}))
+
 application = webapp.WSGIApplication([('/api/v1/getcrossiemetadata', GetCrossieMetaData),
         ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/crossie', Crossie),
-        ('/api/v1/crossieupdates', CrossieUpdates)])
+        ('/api/v1/crossieupdates', CrossieUpdates), ('/api/v1/channel', Channel)])
 
 if __name__ == "__main__":
     run_wsgi_app(application)

@@ -11,6 +11,8 @@ author = null;
 crossiedate = null;
 var crossienum;
 pendingupdates = {};
+var channel = null;
+var socket = null;
 
 DOWN = 1, ACROSS = 2;
 
@@ -23,9 +25,10 @@ function startup() {
     }
 
     loadPendingUpdates();
-    setInterval(clearPendingUpdates, 10000);
+    setInterval(clearPendingUpdates, 1000);
     if (loadAndUpdateCrossieList())
         runCrossie();
+    getChannel();
 }
 
 function runCrossie() {
@@ -563,4 +566,26 @@ function loadPendingUpdates() {
 
 function savePendingUpdates() {
     localStorage.setItem('pendingupdates', JSON.stringify(pendingupdates));
+}
+
+function getChannelCallback(data) {
+    channel = new goog.appengine.Channel(data.token);
+    socket = channel.open();
+    socket.onmessage = function(data) {
+        // console.log(data);
+    };
+    socket.onerror = function(data) {
+        // console.log("Error", data);
+    };
+    socket.onclose = function(data) {
+        channel = null;
+        getChannel();
+    };
+}
+
+function getChannel() {
+    if (channel)
+        return;
+
+    $.ajax({url: '/api/v1/channel', success: getChannelCallback});
 }
