@@ -607,12 +607,35 @@ function handleShareButtonClick() {
     var sharee = prompt('Enter e-mail id of user to share crossword with :');
     if (sharee == null)
         return;
-    // console.log('Sharing crossie ', crossienum, ' with ', sharee);
     $.ajax({url: '/api/v1/share', data: {'crossienum': crossienum, 'sharedWith': sharee}, type: 'POST', success: shareCallback});
 }
 
 function shareCallback(data) {
-    // console.log(data);
+    if (data.error) {
+        alert('Sharing failed : ' + data.error);
+    }
+    else {
+        alert('User has been notified of the share.');
+    }
+}
+
+function acceptShare(data) {
+    $.ajax({url: '/api/v1/share/accept', data: {'shareId': data.shareId}, type: 'POST', success: acceptShareCallback});
+}
+
+function acceptShareCallback(data) {
+    if (data.error) {
+        alert('Accepting share failed : ' + data.error);
+        return;
+    }
+    if (data.success) {
+        var crssie = data.crossie;
+        getCrossieDataCallback(crssie);
+    }
+}
+
+function declineShare(data) {
+    // console.log('Doing cancel share operation...');
 }
 
 function getShareListCallback(data) {
@@ -620,10 +643,10 @@ function getShareListCallback(data) {
         for (var i = 0; i < data.sharedWithMe.length; i ++) {
             var cnf = confirm('Accept share invitation from ' + data.sharedWithMe[i].sharer + ' of crossie number ' + data.sharedWithMe[i].crossienum + '?');
             if (cnf == true) {
-                // console.log('Doing accept share operation...');
+                acceptShare(data.sharedWithMe[i]);
             }
             else {
-                // console.log('Doing cancel share operation...');
+                declineShare(data.sharedWithMe[i]);
             }
         }
     }
