@@ -66,7 +66,7 @@ function getCrossieDataCallback(data) {
     }
     else {
         var needToRewrite = false;
-        var chrs = JSON.parse(localStorage.getItem(crossienum)) || {};
+        var chrs = JSON.parse(localStorage.getItem(data.crossienum)) || {};
         for (var i in data.characters) {
             if (data.characters[i] != chrs[i]) {
                 chrs[i] = data.characters[i];
@@ -572,7 +572,14 @@ function getChannelCallback(data) {
     channel = new goog.appengine.Channel(data.token);
     socket = channel.open();
     socket.onmessage = function(data) {
-        // console.log(data);
+        var dt = JSON.parse(data.data);
+        var changes = {};
+        changes.crossienum = dt.crossienum;
+        changes.characters = {};
+        for (var i = 0; i < dt.updates.length; i ++) {
+            changes.characters[dt.updates[i].pos] = dt.updates[i].char;
+        }
+        getCrossieDataCallback(changes);
     };
     socket.onerror = function(data) {
         // console.log("Error", data);
