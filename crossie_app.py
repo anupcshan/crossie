@@ -441,10 +441,30 @@ class Share(webapp.RequestHandler):
         sharecrossie.put()
         self.response.out.write(simplejson.dumps({'shareId': sharecrossie.key().id()}))
 
+class ShareList(webapp.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
+
+        user = users.get_current_user()
+
+        q = ShareCrossie.all()
+        q.filter('sharee', user)
+        sharedWithMe = []
+        for share in q:
+            sharedWithMe.append({'shareId': share.key().id(), 'sharer': share.sharer.email(), 'crossienum': share.crossienum})
+
+        q = ShareCrossie.all()
+        q.filter('sharer', user)
+        pendinginvites = []
+        for share in q:
+            pendinginvites.append({'shareId': share.key().id(), 'sharee': share.sharee.email(), 'crossienum': share.crossienum})
+
+        self.response.out.write(simplejson.dumps({'sharedWithMe': sharedWithMe, 'pendinginvites': pendinginvites}))
+
 application = webapp.WSGIApplication([('/api/v1/getcrossiemetadata', GetCrossieMetaData),
         ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/crossie', Crossie),
         ('/api/v1/crossieupdates', CrossieUpdates), ('/api/v1/channel', Channel),
-        ('/api/v1/share', Share)])
+        ('/api/v1/share', Share), ('/api/v1/sharelist', ShareList)])
 
 if __name__ == "__main__":
     run_wsgi_app(application)
