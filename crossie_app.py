@@ -77,6 +77,11 @@ class CrossieMetaData(db.Model):
     updated = db.DateTimeProperty(required=True, auto_now=True)
     metadata = db.TextProperty(required=True)
 
+class ShareCrossie(db.Model):
+    crossienum = db.IntegerProperty(required=True)
+    sharer = db.UserProperty(required=True)
+    sharee = db.UserProperty(required=True)
+
 def getpixel(img, x, y):
     x = int(x)
     y = int(y)
@@ -381,9 +386,65 @@ class Channel(webapp.RequestHandler):
         token = channel.create_channel(user.user_id())
         self.response.out.write(simplejson.dumps({'token': token}))
 
+class Share(webapp.RequestHandler):
+    def post(self):
+        self.response.headers['Content-Type'] = 'application/json'
+
+        user = users.get_current_user()
+        crossienum = self.request.get('crossienum')
+        if crossienum is None or len(crossienum) == 0:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'Crossienum should specified.'}))
+            return
+
+        sharee = self.request.get('sharedWith')
+        if sharee is None or len(sharee) == 0:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'SharedWith should specified.'}))
+            return
+
+        crossienum = int(crossienum)
+        q = UserCrossie.all()
+        q.filter('user', user)
+        q.filter('crossienum', crossienum)
+        usercrossie = q.get()
+
+        if usercrossie is None:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'This crossie does not exist.'}))
+            return
+
+        sharee = users.User(sharee)
+        if sharee is None:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'Invalid user id.'}))
+            return
+
+        # Check if already shared with this user.
+        q = ShareCrossie.all()
+        q.filter('sharer', user)
+        q.filter('sharee', sharee)
+        q.filter('crossienum', crossienum)
+        previousshares = q.get()
+        if previousshares is not None:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'Pending invite exists.'}))
+            return
+
+        for usr in usercrossie.crossiedata.acl:
+            if usr == sharee:
+                # Cannot proceed
+                self.response.out.write(simplejson.dumps({'error': 'User already in ACL list.'}))
+                return
+
+        sharecrossie = ShareCrossie(sharer=user, sharee=sharee, crossienum=crossienum)
+        sharecrossie.put()
+        self.response.out.write(simplejson.dumps({'shareId': sharecrossie.key().id()}))
+
 application = webapp.WSGIApplication([('/api/v1/getcrossiemetadata', GetCrossieMetaData),
         ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/crossie', Crossie),
-        ('/api/v1/crossieupdates', CrossieUpdates), ('/api/v1/channel', Channel)])
+        ('/api/v1/crossieupdates', CrossieUpdates), ('/api/v1/channel', Channel),
+        ('/api/v1/share', Share)])
 
 if __name__ == "__main__":
     run_wsgi_app(application)
