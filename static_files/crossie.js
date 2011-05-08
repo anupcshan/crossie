@@ -29,6 +29,7 @@ function startup() {
     if (loadAndUpdateCrossieList())
         runCrossie();
     getChannel();
+    getShares();
 }
 
 function runCrossie() {
@@ -161,6 +162,11 @@ function showHeader() {
         $(select).append(option);
     }
     $(select).change(switchCrossies);
+
+    var shareButton = $('<button>');
+    $(shareButton).addClass('sharebutton').text('Share!');
+    $(header).append(shareButton);
+    $(shareButton).click(handleShareButtonClick);
 
     if (author) {
         var authr = $('<span>');
@@ -595,4 +601,34 @@ function getChannel() {
         return;
 
     $.ajax({url: '/api/v1/channel', success: getChannelCallback});
+}
+
+function handleShareButtonClick() {
+    var sharee = prompt('Enter e-mail id of user to share crossword with :');
+    if (sharee == null)
+        return;
+    // console.log('Sharing crossie ', crossienum, ' with ', sharee);
+    $.ajax({url: '/api/v1/share', data: {'crossienum': crossienum, 'sharedWith': sharee}, type: 'POST', success: shareCallback});
+}
+
+function shareCallback(data) {
+    // console.log(data);
+}
+
+function getShareListCallback(data) {
+    if (data.sharedWithMe && data.sharedWithMe.length != 0) {
+        for (var i = 0; i < data.sharedWithMe.length; i ++) {
+            var cnf = confirm('Accept share invitation from ' + data.sharedWithMe[i].sharer + ' of crossie number ' + data.sharedWithMe[i].crossienum + '?');
+            if (cnf == true) {
+                // console.log('Doing accept share operation...');
+            }
+            else {
+                // console.log('Doing cancel share operation...');
+            }
+        }
+    }
+}
+
+function getShares() {
+    $.ajax({url: '/api/v1/sharelist', success: getShareListCallback});
 }
