@@ -511,7 +511,21 @@ function clearPendingUpdates() {
         }
         $.ajax({url: '/api/v1/crossie', data: {crossienum: cnum, updates: JSON.stringify(updates)},
                 success: function(data) {
-                    delete pendingupdates[data.crossienum];
+                    var remaining = 0;
+                    for (var chr in pendingupdates[data.crossienum]) {
+                        if (pendingupdates[data.crossienum][chr] == '' && ! data.characters[chr]) {
+                            delete pendingupdates[data.crossienum][chr];
+                            continue;
+                        }
+                        if (data.characters[chr] == pendingupdates[data.crossienum][chr]) {
+                            delete pendingupdates[data.crossienum][chr];
+                            continue;
+                        }
+                        remaining ++;
+                    }
+                    if (! remaining) {
+                        delete pendingupdates[data.crossienum];
+                    }
                     savePendingUpdates();
                 }, type: 'POST'});
     }
