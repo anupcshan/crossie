@@ -461,10 +461,71 @@ class ShareList(webapp.RequestHandler):
 
         self.response.out.write(simplejson.dumps({'sharedWithMe': sharedWithMe, 'pendinginvites': pendinginvites}))
 
+class AcceptShare(webapp.RequestHandler):
+    def post(self):
+        self.response.headers['Content-Type'] = 'application/json'
+
+        user = users.get_current_user()
+        shareId = self.request.get('shareId')
+        if shareId is None or len(shareId) == 0:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'ShareId should specified.'}))
+            return
+
+        shareId = long(shareId)
+        sharecrossie = ShareCrossie.get_by_id(shareId)
+        if sharecrossie is None:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'Shared crossie does not exist.'}))
+            return
+
+        if sharecrossie.sharee != user:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'No permission to access shared crossie.'}))
+            return
+
+        q = UserCrossie.all()
+        q.filter('user', sharecrossie.sharer)
+        q.filter('crossienum', sharecrossie.crossienum)
+        usercrossie = q.get()
+
+        if usercrossie is None:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'This crossie does not exist.'}))
+            return
+
+        for usr in usercrossie.crossiedata.acl:
+            if usr == user:
+                # Cannot proceed
+                self.response.out.write(simplejson.dumps({'error': 'User already in ACL list.'}))
+                sharecrossie.delete()
+                return
+
+        # FIXME: The following code should be done in a single transaction. Can screw up.
+        usercrossie.crossiedata.acl.append(user)
+        usercrossie.crossiedata.put()
+        crossiedata = usercrossie.crossiedata
+
+        q = UserCrossie.all()
+        q.filter('user', sharecrossie.sharee)
+        q.filter('crossienum', sharecrossie.crossienum)
+        usercrossie = q.get()
+
+        if usercrossie is None:
+            usercrossie = UserCrossie(crossienum=sharecrossie.crossienum, user=user, crossiedata=crossiedata)
+            usercrossie.put()
+        else:
+            usercrossie.crossiedata = crossiedata
+            usercrossie.put()
+
+        sharecrossie.delete()
+        self.response.out.write(simplejson.dumps({'success': 1, 'crossie': crossiedata.getData()}))
+
 application = webapp.WSGIApplication([('/api/v1/getcrossiemetadata', GetCrossieMetaData),
         ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/crossie', Crossie),
         ('/api/v1/crossieupdates', CrossieUpdates), ('/api/v1/channel', Channel),
-        ('/api/v1/share', Share), ('/api/v1/sharelist', ShareList)])
+        ('/api/v1/share', Share), ('/api/v1/sharelist', ShareList),
+        ('/api/v1/share/accept', AcceptShare)])
 
 if __name__ == "__main__":
     run_wsgi_app(application)
