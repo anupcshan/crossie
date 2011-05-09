@@ -578,14 +578,20 @@ function getChannelCallback(data) {
     channel = new goog.appengine.Channel(data.token);
     socket = channel.open();
     socket.onmessage = function(data) {
-        var dt = JSON.parse(data.data);
-        var changes = {};
-        changes.crossienum = dt.crossienum;
-        changes.characters = {};
-        for (var i = 0; i < dt.updates.length; i ++) {
-            changes.characters[dt.updates[i].pos] = dt.updates[i].char;
+        var msg = JSON.parse(data.data);
+        if (msg.crossieupdate) {
+            var dt = msg.crossieupdate;
+            var changes = {};
+            changes.crossienum = dt.crossienum;
+            changes.characters = {};
+            for (var i = 0; i < dt.updates.length; i ++) {
+                changes.characters[dt.updates[i].pos] = dt.updates[i].char;
+            }
+            getCrossieDataCallback(changes);
         }
-        getCrossieDataCallback(changes);
+        else if (msg.sharedcrossie) {
+            showShare(msg.sharedcrossie);
+        }
     };
     socket.onerror = function(data) {
         // console.log("Error", data);
@@ -638,16 +644,20 @@ function declineShare(data) {
     // console.log('Doing cancel share operation...');
 }
 
+function showShare(data) {
+    var cnf = confirm('Accept share invitation from ' + data.sharer + ' of crossie number ' + data.crossienum + '?');
+    if (cnf == true) {
+        acceptShare(data);
+    }
+    else {
+        declineShare(data);
+    }
+}
+
 function getShareListCallback(data) {
     if (data.sharedWithMe && data.sharedWithMe.length != 0) {
         for (var i = 0; i < data.sharedWithMe.length; i ++) {
-            var cnf = confirm('Accept share invitation from ' + data.sharedWithMe[i].sharer + ' of crossie number ' + data.sharedWithMe[i].crossienum + '?');
-            if (cnf == true) {
-                acceptShare(data.sharedWithMe[i]);
-            }
-            else {
-                declineShare(data.sharedWithMe[i]);
-            }
+            showShare(data.sharedWithMe[i]);
         }
     }
 }

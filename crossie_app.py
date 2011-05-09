@@ -352,7 +352,7 @@ class Crossie(webapp.RequestHandler):
             for usr in crossiedata.acl:
                 if usr != user:
                     try:
-                        channel.send_message(usr.user_id(), simplejson.dumps({'updates': updates, 'crossienum': crossienum}))
+                        channel.send_message(usr.email(), simplejson.dumps({'crossieupdate': {'updates': updates, 'crossienum': crossienum}}))
                     except:
                         # Does not matter if all collabs don't get the message
                         pass
@@ -383,7 +383,7 @@ class Channel(webapp.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
 
         user = users.get_current_user()
-        token = channel.create_channel(user.user_id())
+        token = channel.create_channel(user.email())
         self.response.out.write(simplejson.dumps({'token': token}))
 
 class Share(webapp.RequestHandler):
@@ -439,6 +439,11 @@ class Share(webapp.RequestHandler):
 
         sharecrossie = ShareCrossie(sharer=user, sharee=sharee, crossienum=crossienum)
         sharecrossie.put()
+        try:
+            channel.send_message(sharee.email(), simplejson.dumps({'sharedcrossie': {'shareId': sharecrossie.key().id(), 'sharer': user.email(), 'crossienum': crossienum}}))
+        except:
+            # Does not matter if sharee gets the message right away.
+            pass
         self.response.out.write(simplejson.dumps({'shareId': sharecrossie.key().id()}))
 
 class ShareList(webapp.RequestHandler):
