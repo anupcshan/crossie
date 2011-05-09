@@ -32,8 +32,8 @@ function startup() {
     getShares();
 }
 
-function runCrossie() {
-    if (loadLocalStorageValues()) {
+function runCrossie(noReload) {
+    if (loadLocalStorageValues(noReload)) {
         renderPage();
     }
 }
@@ -50,7 +50,7 @@ function getCrossieMetaDataCallback(data) {
     runCrossie();
 }
 
-function getCrossieDataCallback(data) {
+function getCrossieDataCallback(data, noShowTable) {
     if (crossienum == data.crossienum) {
         var needToReload = false;
         for (var i in data.characters) {
@@ -62,7 +62,8 @@ function getCrossieDataCallback(data) {
 
         if (needToReload) {
             saveLocalStorageValues();
-            runCrossie();
+            if (! noShowTable)
+                showTable();
         }
     }
     else {
@@ -331,7 +332,7 @@ function loadAndUpdateCrossieList() {
     }
 }
 
-function loadLocalStorageValues() {
+function loadLocalStorageValues(noReload) {
     if (! crossielist || ! crossielist.list)
         return 0;
 
@@ -374,9 +375,10 @@ function loadLocalStorageValues() {
         if (crossiedbversion != currentdbversion) {
             saveCrossie();
         }
-        $.ajax({url: '/api/v1/crossie', data: {'crossienum': crossienum}, success: getCrossieDataCallback});
     }
 
+    if (! noReload)
+        $.ajax({url: '/api/v1/crossie', data: {'crossienum': crossienum}, success: function(data) {getCrossieDataCallback(data, true); runCrossie(true);}});
     return 1;
 }
 
