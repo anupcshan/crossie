@@ -80,7 +80,7 @@ class CrossieMetaData(db.Model):
 class ShareCrossie(db.Model):
     crossienum = db.IntegerProperty(required=True)
     sharer = db.UserProperty(required=True)
-    sharee = db.UserProperty(required=True)
+    sharee = db.StringProperty(required=True)
 
 def getpixel(img, x, y):
     x = int(x)
@@ -352,7 +352,7 @@ class Crossie(webapp.RequestHandler):
             for usr in crossiedata.acl:
                 if usr != user:
                     try:
-                        channel.send_message(usr.email(), simplejson.dumps({'crossieupdate': {'updates': updates, 'crossienum': crossienum}}))
+                        channel.send_message(usr.email().lower(), simplejson.dumps({'crossieupdate': {'updates': updates, 'crossienum': crossienum}}))
                     except:
                         # Does not matter if all collabs don't get the message
                         pass
@@ -383,7 +383,7 @@ class Channel(webapp.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
 
         user = users.get_current_user()
-        token = channel.create_channel(user.email())
+        token = channel.create_channel(user.email().lower())
         self.response.out.write(simplejson.dumps({'token': token}))
 
 class Share(webapp.RequestHandler):
@@ -414,12 +414,7 @@ class Share(webapp.RequestHandler):
             self.response.out.write(simplejson.dumps({'error': 'This crossie does not exist.'}))
             return
 
-        sharee = users.User(sharee)
-        if sharee is None:
-            # Cannot proceed
-            self.response.out.write(simplejson.dumps({'error': 'Invalid user id.'}))
-            return
-
+        sharee = sharee.lower()
         # Check if already shared with this user.
         q = ShareCrossie.all()
         q.filter('sharer', user)
@@ -432,7 +427,7 @@ class Share(webapp.RequestHandler):
             return
 
         for usr in usercrossie.crossiedata.acl:
-            if usr == sharee:
+            if usr.email().lower() == sharee:
                 # Cannot proceed
                 self.response.out.write(simplejson.dumps({'error': 'User already in ACL list.'}))
                 return
@@ -440,7 +435,7 @@ class Share(webapp.RequestHandler):
         sharecrossie = ShareCrossie(sharer=user, sharee=sharee, crossienum=crossienum)
         sharecrossie.put()
         try:
-            channel.send_message(sharee.email(), simplejson.dumps({'sharedcrossie': {'shareId': sharecrossie.key().id(), 'sharer': user.email(), 'crossienum': crossienum}}))
+            channel.send_message(sharee, simplejson.dumps({'sharedcrossie': {'shareId': sharecrossie.key().id(), 'sharer': user.email(), 'crossienum': crossienum}}))
         except:
             # Does not matter if sharee gets the message right away.
             pass
@@ -453,7 +448,7 @@ class ShareList(webapp.RequestHandler):
         user = users.get_current_user()
 
         q = ShareCrossie.all()
-        q.filter('sharee', user)
+        q.filter('sharee', user.email().lower())
         sharedWithMe = []
         for share in q:
             sharedWithMe.append({'shareId': share.key().id(), 'sharer': share.sharer.email(), 'crossienum': share.crossienum})
@@ -462,7 +457,7 @@ class ShareList(webapp.RequestHandler):
         q.filter('sharer', user)
         pendinginvites = []
         for share in q:
-            pendinginvites.append({'shareId': share.key().id(), 'sharee': share.sharee.email(), 'crossienum': share.crossienum})
+            pendinginvites.append({'shareId': share.key().id(), 'sharee': share.sharee, 'crossienum': share.crossienum})
 
         self.response.out.write(simplejson.dumps({'sharedWithMe': sharedWithMe, 'pendinginvites': pendinginvites}))
 
@@ -484,7 +479,7 @@ class AcceptShare(webapp.RequestHandler):
             self.response.out.write(simplejson.dumps({'error': 'Shared crossie does not exist.'}))
             return
 
-        if sharecrossie.sharee != user:
+        if sharecrossie.sharee != user.email().lower():
             # Cannot proceed
             self.response.out.write(simplejson.dumps({'error': 'No permission to access shared crossie.'}))
             return
@@ -512,7 +507,7 @@ class AcceptShare(webapp.RequestHandler):
         crossiedata = usercrossie.crossiedata
 
         q = UserCrossie.all()
-        q.filter('user', sharecrossie.sharee)
+        q.filter('user', user)
         q.filter('crossienum', sharecrossie.crossienum)
         usercrossie = q.get()
 
