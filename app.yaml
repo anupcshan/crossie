@@ -22,3 +22,7 @@ handlers:
 - url: /static_files
   static_dir: static_files
   login: required
+
+- url: /admin/v1/.*
+  script: admin_ops.py
+  login: admin
