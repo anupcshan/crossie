@@ -50,20 +50,34 @@ function getCrossieMetaDataCallback(data) {
     runCrossie();
 }
 
-function getCrossieDataCallback(data, noShowTable) {
+function getCrossieDataCallback(data, doRunCrossie) {
     if (crossienum == data.crossienum) {
-        var needToReload = false;
-        for (var i in data.characters) {
-            if (data.characters[i] != characters[i]) {
-                characters[i] = data.characters[i];
-                needToReload = true;
+        if (! doRunCrossie) {
+            for (var i in data.characters) {
+                if (data.characters[i] != characters[i]) {
+                    characters[i] = data.characters[i];
+                    arr = i.split(',');
+                    arr[0] = parseInt(arr[0]);
+                    arr[1] = parseInt(arr[1]);
+                    $($(getCrosswordDivXY(arr)).children('.cluecharacter')[0]).text(characters[arr]);
+                    recalcCell(getCrosswordDivXY(arr));
+                }
             }
-        }
-
-        if (needToReload) {
             saveLocalStorageValues();
-            if (! noShowTable)
-                showTable();
+        }
+        else {
+            var needToReload = false;
+            for (var i in data.characters) {
+                if (data.characters[i] != characters[i]) {
+                    characters[i] = data.characters[i];
+                    needToReload = true;
+                }
+            }
+
+            saveLocalStorageValues();
+            if (needToReload) {
+                runCrossie(true);
+            }
         }
     }
     else {
@@ -247,6 +261,13 @@ function showTable() {
     $('.characterinput').change(handleChange);
 }
 
+function recalcCell(cell) {
+    if ($(cell).data('acrossstart'))
+        recalcClueCompletion($(cell).data('acrossstart'), ACROSS);
+    if ($(cell).data('downstart'))
+        recalcClueCompletion($(cell).data('downstart'), DOWN);
+}
+
 function recalcClueCompletion(cluenum, dirn) {
     cluenum = parseInt(cluenum) - 1;
     var startp = startpos[cluenum];
@@ -378,7 +399,7 @@ function loadLocalStorageValues(noReload) {
     }
 
     if (! noReload)
-        $.ajax({url: '/api/v1/crossie', data: {'crossienum': crossienum}, success: function(data) {getCrossieDataCallback(data, true); runCrossie(true);}});
+        $.ajax({url: '/api/v1/crossie', data: {'crossienum': crossienum}, success: function(data) {getCrossieDataCallback(data, true);}});
     return 1;
 }
 
@@ -417,10 +438,7 @@ function handleBlur() {
     var chldrn = $(parnt).children();
     var txtnode = chldrn[chldrn.length - 2];
     $(txtnode).text(characters[arr]);
-    if ($(parnt).data('acrossstart'))
-        recalcClueCompletion($(parnt).data('acrossstart'), ACROSS);
-    if ($(parnt).data('downstart'))
-        recalcClueCompletion($(parnt).data('downstart'), DOWN);
+    recalcCell(parnt);
     saveLocalStorageValues();
 }
 
