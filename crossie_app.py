@@ -82,6 +82,28 @@ class ShareCrossie(db.Model):
     sharer = db.UserProperty(required=True)
     sharee = db.StringProperty(required=True)
 
+class EmailUser(db.Model):
+    email = db.StringProperty(required=True)
+    user = db.UserProperty(required=True)
+
+    @staticmethod
+    def get_or_insert_user(email, user=None):
+        email = email.lower()
+        emailuser = memcache.get('EmailUser' + email)
+        if emailuser is not None:
+            return emailuser.user
+
+        emailuser = EmailUser.all().filter('email', email).get()
+        if emailuser is None:
+            if user is None:
+                return None
+            else:
+                emailuser = EmailUser(email=email, user=user)
+                emailuser.put()
+
+        memcache.add('EmailUser' + email, emailuser)
+        return emailuser.user
+
 def getpixel(img, x, y):
     x = int(x)
     y = int(y)
@@ -264,6 +286,10 @@ class GetCrossieMetaData(webapp.RequestHandler):
 class GetCrossieList(webapp.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'application/json'
+
+        user = users.get_current_user()
+        EmailUser.get_or_insert_user(user.email(), user)
+
         q = CrossieMetaData.all()
         since = self.request.get('since')
         if since is not None and len(since) != 0:
