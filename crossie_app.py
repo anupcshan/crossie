@@ -494,12 +494,11 @@ class AcceptShare(webapp.RequestHandler):
             self.response.out.write(simplejson.dumps({'error': 'This crossie does not exist.'}))
             return
 
-        for usr in usercrossie.crossiedata.acl:
-            if usr == user:
-                # Cannot proceed
-                self.response.out.write(simplejson.dumps({'error': 'User already in ACL list.'}))
-                sharecrossie.delete()
-                return
+        if user in usercrossie.crossiedata.acl:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'User already in ACL list.'}))
+            sharecrossie.delete()
+            return
 
         # FIXME: The following code should be done in a single transaction. Can screw up.
         usercrossie.crossiedata.acl.append(user)
@@ -515,6 +514,7 @@ class AcceptShare(webapp.RequestHandler):
             usercrossie = UserCrossie(crossienum=sharecrossie.crossienum, user=user, crossiedata=crossiedata)
             usercrossie.put()
         else:
+            usercrossie.crossiedata.acl.remove(user)
             usercrossie.crossiedata = crossiedata
             usercrossie.put()
 
