@@ -11,6 +11,7 @@ author = null;
 crossiedate = null;
 var crossienum;
 pendingupdates = {};
+var username = null;
 var channel = null;
 var socket = null;
 
@@ -344,11 +345,11 @@ function showClues() {
 function loadAndUpdateCrossieList() {
     crossielist = JSON.parse(localStorage.getItem("crossielist")) || {};
     if (! crossielist || ! crossielist.lastupdated || ! crossielist.list) {
-        $.ajax({url: '/api/v1/getcrossielist', success: function(data) {getCrossieListCallback(data, true); runCrossie();}});
+        $.ajax({url: '/api/v1/getcrossielist', success: function(data) {getCrossieListCallback(data, true); runCrossie();}, error: checkLoggedIn});
         return 0;
     }
     else if (crossielist && crossielist.lastupdated) {
-        $.ajax({url: '/api/v1/getcrossielist', data: {'since': crossielist.lastupdated}, success: getCrossieListCallback});
+        $.ajax({url: '/api/v1/getcrossielist', data: {'since': crossielist.lastupdated}, success: getCrossieListCallback, error: checkLoggedIn});
         return 1;
     }
 }
@@ -377,10 +378,10 @@ function loadLocalStorageValues(noReload) {
         if (! saveCrossie()) {
             // No data to save crossie => need to load data from server.
             if (crossiedate) {
-                $.ajax({url: '/api/v1/getcrossiemetadata', data: {'date': crossiedate}, success: getCrossieMetaDataCallback});
+                $.ajax({url: '/api/v1/getcrossiemetadata', data: {'date': crossiedate}, success: getCrossieMetaDataCallback, error: checkLoggedIn});
             }
             else {
-                $.ajax({url: '/api/v1/getcrossiemetadata', success: getCrossieMetaDataCallback});
+                $.ajax({url: '/api/v1/getcrossiemetadata', success: getCrossieMetaDataCallback, error: checkLoggedIn});
             }
             return 0;
         }
@@ -399,7 +400,7 @@ function loadLocalStorageValues(noReload) {
     }
 
     if (! noReload)
-        $.ajax({url: '/api/v1/crossie', data: {'crossienum': crossienum}, success: function(data) {getCrossieDataCallback(data, true);}});
+        $.ajax({url: '/api/v1/crossie', data: {'crossienum': crossienum}, success: function(data) {getCrossieDataCallback(data, true);}, error: checkLoggedIn});
     return 1;
 }
 
@@ -556,7 +557,7 @@ function clearPendingUpdates() {
                         delete pendingupdates[data.crossienum];
                     }
                     savePendingUpdates();
-                }, type: 'POST'});
+                }, type: 'POST', error: checkLoggedIn});
     }
 
     this.running = 0;
@@ -626,14 +627,14 @@ function getChannel() {
     if (channel)
         return;
 
-    $.ajax({url: '/api/v1/channel', success: getChannelCallback});
+    $.ajax({url: '/api/v1/channel', success: getChannelCallback, error: checkLoggedIn});
 }
 
 function handleShareButtonClick() {
     var sharee = prompt('Enter e-mail id of user to share crossword with :');
     if (sharee == null)
         return;
-    $.ajax({url: '/api/v1/share', data: {'crossienum': crossienum, 'sharedWith': sharee}, type: 'POST', success: shareCallback});
+    $.ajax({url: '/api/v1/share', data: {'crossienum': crossienum, 'sharedWith': sharee}, type: 'POST', success: shareCallback, error: checkLoggedIn});
 }
 
 function shareCallback(data) {
@@ -646,7 +647,7 @@ function shareCallback(data) {
 }
 
 function acceptShare(data) {
-    $.ajax({url: '/api/v1/share/accept', data: {'shareId': data.shareId}, type: 'POST', success: acceptShareCallback});
+    $.ajax({url: '/api/v1/share/accept', data: {'shareId': data.shareId}, type: 'POST', success: acceptShareCallback, error: checkLoggedIn});
 }
 
 function acceptShareCallback(data) {
@@ -683,5 +684,17 @@ function getShareListCallback(data) {
 }
 
 function getShares() {
-    $.ajax({url: '/api/v1/sharelist', success: getShareListCallback});
+    $.ajax({url: '/api/v1/sharelist', success: getShareListCallback, error: checkLoggedIn});
+}
+
+function checkLoggedIn() {
+    $.ajax({url: '/public/v1/myinfo', success: function(data) {
+                    if (data.user) {
+                        username = data.user;
+                    }
+                    else if (data.login) {
+                        window.location = data.login;
+                    }
+                }
+            });
 }

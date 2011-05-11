@@ -26,3 +26,6 @@ handlers:
 - url: /admin/v1/.*
   script: admin_ops.py
   login: admin
+
+- url: /public/v1/.*
+  script: public.py
