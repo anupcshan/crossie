@@ -4,9 +4,9 @@ from google.appengine.api import memcache
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-from crossie_app import UserCrossie
-from crossie_app import CrossieData
+from crossie_app import *
 import simplejson
+import datetime
 
 class FlushMemcache(webapp.RequestHandler):
     def get(self):
@@ -35,7 +35,18 @@ class CheckDB(webapp.RequestHandler):
 
         self.response.out.write(simplejson.dumps({'ucsnotincd': ucsnotincd, 'cdsnotinuc': cdsnotinuc}))
 
-application = webapp.WSGIApplication([('/admin/v1/clearmemcache', FlushMemcache), ('/admin/v1/checkdb', CheckDB)])
+class FetchTodaysCrossie(webapp.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
+        today = datetime.datetime.today()
+        year = today.year
+        month = today.month
+        day = today.day
+        metadata = fetchpage(year, month, day)
+        self.response.out.write(metadata)
+
+application = webapp.WSGIApplication([('/admin/v1/clearmemcache', FlushMemcache), ('/admin/v1/checkdb', CheckDB),
+                                      ('/admin/v1/fetchtodayscrossie', FetchTodaysCrossie)])
 
 if __name__ == "__main__":
     run_wsgi_app(application)
