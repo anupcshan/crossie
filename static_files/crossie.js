@@ -102,11 +102,15 @@ function sortCrossieList() {
     var temp = null;
     var list = crossielist.list;
     for (var i = 0; i < list.length; i ++) {
-        for (var j = 0; j < list.length; j ++) {
-            if (list[i].date < list[j].date) {
+        for (var j = i + 1; j < list.length; j ++) {
+            if (list[i].date > list[j].date) {
                 temp = list[i];
                 list[i] = list[j];
                 list[j] = temp;
+            }
+            else if (list[i].date == list[j].date) {
+                list[j] = list[list.length - 1];
+                list.length --;
             }
         }
     }
