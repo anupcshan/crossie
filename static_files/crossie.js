@@ -61,6 +61,7 @@ function getCrossieDataCallback(data, doRunCrossie) {
                     arr[0] = parseInt(arr[0]);
                     arr[1] = parseInt(arr[1]);
                     $($(getCrosswordDivXY(arr)).children('.cluecharacter')[0]).text(characters[arr]);
+                    $(getCrosswordDivXY(arr)).animate({backgroundColor: 'blue'}, 1000).animate({backgroundColor: 'white'}, 1000);
                     recalcCell(getCrosswordDivXY(arr));
                 }
             }
