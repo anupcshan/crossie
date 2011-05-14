@@ -449,6 +449,9 @@ function handleBlur() {
 }
 
 function getCrosswordDivXY(arr) {
+    // Keep cursor within bounds. Don't let it wrap around from the right.
+    if (arr[0] < 0 || arr[0] >= 15 || arr[1] < 0 || arr[1] >= 15)
+        return [];
     return $($('td')[arr[0]*15 + arr[1]]).children();
 }
 
@@ -466,8 +469,6 @@ function handleKeyUp(evt) {
         $(getCrosswordDivXY(arr)).children('input').val(characters[arr]);
         return;
     }
-
-    $(this).blur();
 
     switch (evt.keyCode) {
         case 37:
@@ -502,7 +503,12 @@ function handleKeyUp(evt) {
                 arr[0] ++;
             }
     }
-    getCrosswordDivXY(arr).click();
+
+    // In case next cell is valid and is not black, move. Else, stay.
+    if (getCrosswordDivXY(arr).length != 0) {
+        $(this).blur();
+        getCrosswordDivXY(arr).click();
+    }
 }
 
 function handleChange(evt) {
