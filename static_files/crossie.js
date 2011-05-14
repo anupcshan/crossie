@@ -1,6 +1,5 @@
 currentdbversion = 1;
 characters = {};
-dirn = 'across';
 crossielist = {};
 cluecells = {};
 across = {};
@@ -17,6 +16,7 @@ var socket = null;
 
 DOWN = 1, ACROSS = 2;
 
+dirn = ACROSS;
 cluecells[DOWN] = [];
 cluecells[ACROSS] = [];
 
@@ -241,10 +241,12 @@ function showTable() {
 
                 if (acrossstarter != undefined) {
                     $(tcelldiv).data('acrossstart', acrossstarter);
+                    $(tcelldiv).addClass('across-' + acrossstarter);
                 }
 
                 if (downstarters[j] != undefined) {
                     $(tcelldiv).data('downstart', downstarters[j]);
+                    $(tcelldiv).addClass('down-' + downstarters[j]);
                 }
 
                 var character = $('<span>');
@@ -337,12 +339,7 @@ function showClues() {
         addClue(i, down[i], downDiv, DOWN);
     }
 
-    $(acrossDiv).click(function() {dirn = 'across'; $(acrossDiv).addClass('selected'); $(downDiv).removeClass('selected');});
-    $(downDiv).click(function() {dirn = 'down'; $(acrossDiv).removeClass('selected'); $(downDiv).addClass('selected');});
-
-    dirn = 'across';
-    $(acrossDiv).addClass('selected');
-    $(downDiv).removeClass('selected');
+    dirn = ACROSS;
 
     $('.clue').click(handleClueClick);
 }
@@ -421,6 +418,17 @@ function saveLocalStorageValues() {
     localStorage.setItem(crossienum, JSON.stringify(characters));
 }
 
+function highlightClue(cluenum, dirn) {
+    var classname = '.' + (dirn == ACROSS ? 'across-':'down-') + cluenum;
+    $(classname).addClass('selected');
+    $(cluecells[dirn][cluenum - 1]).addClass('selected');
+}
+
+function dehighlightClues() {
+    $('.clue.selected').removeClass('selected');
+    $('.not-blacked-out.selected').removeClass('selected');
+}
+
 function handleClick() {
     // Handle click on a white square.
     var chldrn = $(this).children();
@@ -428,6 +436,27 @@ function handleClick() {
     var x = $(this).data('x');
     var y = $(this).data('y');
     var arr = [x, y];
+
+    var cluenum;
+    if ($(this).data().acrossstart && $(this).data().downstart) {
+        if (dirn == ACROSS) {
+            cluenum = $(this).data().acrossstart;
+        }
+        else {
+            cluenum = $(this).data().downstart;
+        }
+    }
+    else if ($(this).data().acrossstart) {
+        cluenum = $(this).data().acrossstart;
+        dirn = ACROSS;
+    }
+    else {
+        cluenum = $(this).data().downstart;
+        dirn = DOWN;
+    }
+
+    highlightClue(cluenum, dirn);
+
     $(txtbox).val(characters[arr]);
     $(txtbox).show();
     $(txtbox).focus();
@@ -446,6 +475,7 @@ function handleBlur() {
     $(txtnode).text(characters[arr]);
     recalcCell(parnt);
     saveLocalStorageValues();
+    dehighlightClues();
 }
 
 function getCrosswordDivXY(arr) {
@@ -488,7 +518,7 @@ function handleKeyUp(evt) {
             arr[0] ++;
             break;
         case 8:
-            if (dirn == 'across') {
+            if (dirn == ACROSS) {
                 arr[1] --;
             }
             else {
@@ -496,7 +526,7 @@ function handleKeyUp(evt) {
             }
             break;
         default:
-            if (dirn == 'across') {
+            if (dirn == ACROSS) {
                 arr[1] ++;
             }
             else {
@@ -523,6 +553,7 @@ function handleClueClick() {
     var cluemeta = $(this).data('cluemeta');
     var cluenum = cluemeta.cluenum;
     var arr = startpos[cluenum - 1];
+    dirn = cluemeta.dirn;
     getCrosswordDivXY(arr).click();
 }
 

@@ -15,6 +15,11 @@ table {
     width: 24px;
     height: 24px;
     position: relative;
+    cursor: text;
+}
+
+.not-blacked-out.selected {
+    background-color: lightgreen;
 }
 
 .cluenum {
@@ -98,6 +103,10 @@ table {
 .clue.filled {
     text-decoration: line-through;
     color: gray;
+}
+
+.clue.selected {
+    font-weight: bold;
 }
 
 .lightbox {
