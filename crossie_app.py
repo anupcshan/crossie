@@ -104,6 +104,41 @@ class EmailUser(db.Model):
         memcache.add('EmailUser' + email, emailuser)
         return emailuser.user
 
+class UserToken(db.Model):
+    token = db.StringProperty(required=True)
+    created = db.DateTimeProperty(required=True, auto_now_add=True)
+    lastused = db.DateTimeProperty(required=True, auto_now=True)
+    user = db.UserProperty(required=True)
+
+    @staticmethod
+    def get_or_insert_token(user):
+        usertoken = memcache.get('UserToken' + user.user_id());
+        if usertoken is not None:
+            if usertoken.created <= datetime.datetime.now() - datetime.timedelta(hours=2):
+                memcache.delete('UserToken' + user.user_id())
+                usertoken.delete()
+                usertoken = None
+            else:
+                return usertoken.token
+        else:
+            # There is a 2 hour timeout for each token.
+            for staleusertoken in UserToken.all().filter('user', user).filter('created <=', datetime.datetime.now() - datetime.timedelta(hours=2)):
+                staleusertoken.delete()
+
+            # Also, a token should not be transferred from one user to another to prevent security issues.
+            # Assuming only one token per user. Apparently, it allows a fan out of around 8.
+            # No real support for people who use the app in more than 1 client simultaneously.
+
+            usertoken = UserToken.all().filter('user', user).filter('created >', datetime.datetime.now() - datetime.timedelta(hours=2)).get()
+            if usertoken is not None:
+                memcache.add('UserToken' + user.user_id(), usertoken)
+                return usertoken.token
+
+        usertoken = UserToken(token=channel.create_channel(user.user_id()), user=user)
+        usertoken.put()
+        memcache.add('UserToken' + user.user_id(), usertoken)
+        return usertoken.token
+
 def getpixel(img, x, y):
     x = int(x)
     y = int(y)
@@ -378,7 +413,7 @@ class Crossie(webapp.RequestHandler):
             for usr in crossiedata.acl:
                 if usr != user:
                     try:
-                        channel.send_message(usr.email().lower(), simplejson.dumps({'crossieupdate': {'updates': updates, 'crossienum': crossienum}}))
+                        channel.send_message(usr.user_id(), simplejson.dumps({'crossieupdate': {'updates': updates, 'crossienum': crossienum}}))
                     except:
                         # Does not matter if all collabs don't get the message
                         pass
@@ -409,7 +444,7 @@ class Channel(webapp.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
 
         user = users.get_current_user()
-        token = channel.create_channel(user.email().lower())
+        token = UserToken.get_or_insert_token(user)
         self.response.out.write(simplejson.dumps({'token': token}))
 
 class Share(webapp.RequestHandler):
@@ -461,7 +496,9 @@ class Share(webapp.RequestHandler):
         sharecrossie = ShareCrossie(sharer=user, sharee=sharee, crossienum=crossienum)
         sharecrossie.put()
         try:
-            channel.send_message(sharee, simplejson.dumps({'sharedcrossie': {'shareId': sharecrossie.key().id(), 'sharer': user.email(), 'crossienum': crossienum}}))
+            shareeuser = EmailUser.get_or_insert_user(sharee)
+            if shareeuser is not None:
+                channel.send_message(shareeuser.user_id(), simplejson.dumps({'sharedcrossie': {'shareId': sharecrossie.key().id(), 'sharer': user.email(), 'crossienum': crossienum}}))
         except:
             # Does not matter if sharee gets the message right away.
             pass
