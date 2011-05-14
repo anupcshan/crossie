@@ -454,17 +454,20 @@ function getCrosswordDivXY(arr) {
 
 function handleKeyUp(evt) {
     var keypressed = String.fromCharCode(evt.keyCode);
-
-    // Ignore everything except a-z, A-Z, arrow keys and backspace.
-    if (! ((keypressed >= 'a' && keypressed <= 'z') || (keypressed >= 'A' && keypressed <= 'Z')
-                || (evt.keyCode >= 37 && evt.keyCode <= 40) || (evt.keyCode == 8)))
-        return;
-
-    $(this).blur();
     var parnt = $(this).parent();
     var x = $(parnt).data('x');
     var y = $(parnt).data('y');
     var arr = [x, y];
+
+    // Ignore everything except a-z, A-Z, arrow keys and backspace.
+    if (! ((keypressed >= 'a' && keypressed <= 'z') || (keypressed >= 'A' && keypressed <= 'Z')
+                || (evt.keyCode >= 37 && evt.keyCode <= 40) || (evt.keyCode == 8))) {
+        // Revert if any non-alphabet has been entered.
+        $(getCrosswordDivXY(arr)).children('input').val(characters[arr]);
+        return;
+    }
+
+    $(this).blur();
 
     switch (evt.keyCode) {
         case 37:
