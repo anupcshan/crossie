@@ -185,7 +185,7 @@ function showHeader() {
     $(select).change(switchCrossies);
 
     var shareButton = $('<button>');
-    $(shareButton).addClass('sharebutton').text('Share!');
+    $(shareButton).addClass('sharebutton').text('Collaborate!');
     $(header).append(shareButton);
     $(shareButton).click(handleShareButtonClick);
 
