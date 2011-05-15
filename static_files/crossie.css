@@ -1,6 +1,7 @@
 body {
     font-family: monospace;
     font-size: 13px;
+    min-width: 1200px;
 }
 
 td {
@@ -49,11 +50,14 @@ table {
     left: -1px;
 }
 
+.mainpage {
+    height: 95%;
+}
+
 .tablediv {
     float: left;
     height: 93%;
     width: 420px;
-    margin-left: -100%;
     padding-top: 20px;
 }
 
@@ -61,6 +65,12 @@ table {
     float: left;
     height: 96%;
     width: 100%;
+}
+
+.chatdiv {
+    height: 93%;
+    width: 300px;
+    float: right;
 }
 
 .cluesinner {
