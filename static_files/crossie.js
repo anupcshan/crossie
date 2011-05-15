@@ -125,7 +125,7 @@ function getCrossieListCallback(data, norender) {
     crossielist.lastupdated = data.lastupdated;
     localStorage.setItem('crossielist', JSON.stringify(crossielist));
     if (! norender)
-        renderPage();
+        showHeader();
 }
 
 function renderPage() {
@@ -351,7 +351,7 @@ function loadAndUpdateCrossieList() {
         return 0;
     }
     else if (crossielist && crossielist.lastupdated) {
-        $.ajax({url: '/api/v1/getcrossielist', data: {'since': crossielist.lastupdated}, success: getCrossieListCallback, error: checkLoggedIn});
+        $.ajax({url: '/api/v1/getcrossielist', data: {'since': crossielist.lastupdated}, success: function(data) {getCrossieListCallback(data);}, error: checkLoggedIn});
         return 1;
     }
 }
