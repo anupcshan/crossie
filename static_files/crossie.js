@@ -75,7 +75,8 @@ function getCrossieDataCallback(data, doRunCrossie) {
                     arr[0] = parseInt(arr[0]);
                     arr[1] = parseInt(arr[1]);
                     $($(getCrosswordDivXY(arr)).children('.cluecharacter')[0]).text(characters[arr]);
-                    $(getCrosswordDivXY(arr)).animate({backgroundColor: 'blue'}, 1000).animate({backgroundColor: 'white'}, 1000);
+                    $(getCrosswordDivXY(arr)).animate({backgroundColor: 'blue'}, 1000)
+                        .animate({backgroundColor: 'white'}, 1000, function() {$(this).css('background-color', '')});
                     recalcCell(getCrosswordDivXY(arr));
                 }
             }
@@ -396,8 +397,12 @@ function loadLocalStorageValues(noReload) {
     var crossie = JSON.parse(localStorage.getItem(crossienum)) || {};
     if (crossie.characters)
         characters = crossie.characters;
+    else
+        characters = {};
     if (crossie.acl)
         acl = crossie.acl;
+    else
+        acl = [];
     var crossie = JSON.parse(localStorage.getItem(crossienum + "crossie")) || null;
     if (! crossie) {
         if (! saveCrossie()) {
