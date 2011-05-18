@@ -147,6 +147,33 @@ class UserToken(db.Model):
         memcache.add('UserToken' + user.user_id(), usertoken)
         return usertoken.token
 
+class CrossieChatLogEntry(db.Model):
+    crossiedata = db.ReferenceProperty(CrossieData, required=True)
+    msg = db.TextProperty(required=True)
+    user = db.UserProperty(required=True)
+    timestamp = db.DateTimeProperty(required=True, auto_now=True)
+
+    @staticmethod
+    def add_log(user, crossienum, msg):
+        usercrossie = UserCrossie.all().filter('user', user).filter('crossienum', crossienum).get()
+        if usercrossie is None:
+            crossiedata = CrossieData(crossienum=crossienum, acl=[user])
+            crossiedata.put()
+            usercrossie = UserCrossie(crossienum=crossienum, user=user, crossiedata=crossiedata)
+            usercrossie.put()
+
+        crossiedata = usercrossie.crossiedata
+        chatlogentry = CrossieChatLogEntry(crossiedata=crossiedata, msg=msg, user=user)
+        chatlogentry.put()
+
+        for usr in crossiedata.acl:
+            if usr != user:
+                try:
+                    channel.send_message(usr.user_id(), simplejson.dumps({'chat': {'msg': msg, 'crossienum': crossienum, 'user': user.email()}}))
+                except:
+                    # Does not matter if all collaborators don't get the message
+                    pass
+
 def getpixel(img, x, y):
     x = int(x)
     y = int(y)
@@ -592,11 +619,31 @@ class AcceptShare(webapp.RequestHandler):
         sharecrossie.delete()
         self.response.out.write(simplejson.dumps({'success': 1, 'crossie': crossiedata.getData()}))
 
+class Chat(webapp.RequestHandler):
+    def post(self):
+        self.response.headers['Content-Type'] = 'application/json'
+
+        user = users.get_current_user()
+        crossienum = self.request.get('crossienum')
+        if crossienum is None or len(crossienum) == 0:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'Crossienum should specified.'}))
+            return
+
+        crossienum = int(crossienum)
+        msg = self.request.get('msg')
+        if msg is None or len(msg) == 0:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'Message should specified.'}))
+            return
+
+        CrossieChatLogEntry.add_log(user, crossienum, msg);
+
 application = webapp.WSGIApplication([('/api/v1/getcrossiemetadata', GetCrossieMetaData),
         ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/crossie', Crossie),
         ('/api/v1/crossieupdates', CrossieUpdates), ('/api/v1/channel', Channel),
         ('/api/v1/share', Share), ('/api/v1/sharelist', ShareList),
-        ('/api/v1/share/accept', AcceptShare)])
+        ('/api/v1/share/accept', AcceptShare), ('/api/v1/chat', Chat)])
 
 if __name__ == "__main__":
     run_wsgi_app(application)

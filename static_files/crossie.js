@@ -682,6 +682,9 @@ function getChannelCallback(data) {
         else if (msg.sharedcrossie) {
             showShare(msg.sharedcrossie);
         }
+        else if (msg.chat) {
+            // console.log('Chat message: ', msg.chat);
+        }
     };
     socket.onerror = function(data) {
         // console.log("Error", data);
