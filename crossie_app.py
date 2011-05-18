@@ -32,7 +32,15 @@ class CrossieData(db.Model):
         return simplejson.dumps(self.getData())
 
     def getData(self):
-        return {'crossienum': self.crossienum, 'characters': self.getCharacters(), 'crossieid': self.key().id(), 'updated': self.updated.__str__()}
+        return {'crossienum': self.crossienum, 'characters': self.getCharacters(),
+                'crossieid': self.key().id(), 'updated': self.updated.__str__(),
+                'acl': self.getACL()}
+
+    def getACL(self):
+        list = []
+        for usr in self.acl:
+            list.append(usr.email())
+        return list
 
     def getCharacters(self):
         list = {}

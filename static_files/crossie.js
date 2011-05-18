@@ -13,6 +13,7 @@ pendingupdates = {};
 var username = null;
 var channel = null;
 var socket = null;
+acl = [];
 
 DOWN = 1, ACROSS = 2;
 
@@ -25,17 +26,27 @@ function startup() {
         return;
     }
 
+    checkLocalDBVersion();
     loadPendingUpdates();
     setInterval(clearPendingUpdates, 1000);
     if (loadAndUpdateCrossieList())
         runCrossie();
     getChannel();
     getShares();
+    checkLoggedIn();
 }
 
 function runCrossie(noReload) {
     if (loadLocalStorageValues(noReload)) {
         renderPage();
+    }
+}
+
+function checkLocalDBVersion() {
+    var localdbversion = localStorage.getItem('currentdbversion');
+    if (! localdbversion || parseInt(localdbversion) != currentdbversion) {
+        localStorage.clear();
+        localStorage.setItem('currentdbversion', currentdbversion);
     }
 }
 
@@ -53,6 +64,9 @@ function getCrossieMetaDataCallback(data) {
 
 function getCrossieDataCallback(data, doRunCrossie) {
     if (crossienum == data.crossienum) {
+        if (data.acl)
+            acl = data.acl;
+
         if (! doRunCrossie) {
             for (var i in data.characters) {
                 if (data.characters[i] != characters[i]) {
@@ -132,6 +146,7 @@ function renderPage() {
     showHeader();
     showTable();
     showClues();
+    showChatWindow();
 }
 
 function testLocalStorage() {
@@ -344,6 +359,10 @@ function showClues() {
     $('.clue').click(handleClueClick);
 }
 
+function showChatWindow() {
+    // TODO: Not implemented.
+}
+
 function loadAndUpdateCrossieList() {
     crossielist = JSON.parse(localStorage.getItem("crossielist")) || {};
     if (! crossielist || ! crossielist.lastupdated || ! crossielist.list) {
@@ -374,7 +393,11 @@ function loadLocalStorageValues(noReload) {
     }
     localStorage.setItem('currentcrossie', crossienum);
 
-    characters = JSON.parse(localStorage.getItem(crossienum)) || {};
+    var crossie = JSON.parse(localStorage.getItem(crossienum)) || {};
+    if (crossie.characters)
+        characters = crossie.characters;
+    if (crossie.acl)
+        acl = crossie.acl;
     var crossie = JSON.parse(localStorage.getItem(crossienum + "crossie")) || null;
     if (! crossie) {
         if (! saveCrossie()) {
@@ -395,10 +418,6 @@ function loadLocalStorageValues(noReload) {
         startpos = crossie.startpos || startpos;
         author = crossie.author || author;
         crossiedate = crossie.crossiedate || crossiedate;
-        var crossiedbversion = crossie.dbversion;
-        if (crossiedbversion != currentdbversion) {
-            saveCrossie();
-        }
     }
 
     if (! noReload)
@@ -409,13 +428,13 @@ function loadLocalStorageValues(noReload) {
 function saveCrossie() {
     if (! (across && down && matrix.length && startpos.length && crossiedate))
         return 0;
-    var crossie = {across: across, down: down, matrix: matrix, startpos: startpos, author: author, dbversion: currentdbversion, crossiedate: crossiedate};
+    var crossie = {across: across, down: down, matrix: matrix, startpos: startpos, author: author, crossiedate: crossiedate};
     localStorage.setItem(crossienum + "crossie", JSON.stringify(crossie));
     return 1;
 }
 
 function saveLocalStorageValues() {
-    localStorage.setItem(crossienum, JSON.stringify(characters));
+    localStorage.setItem(crossienum, JSON.stringify({characters: characters, acl: acl}));
 }
 
 function highlightClue(cluenum, dirn) {
