@@ -153,6 +153,9 @@ class CrossieChatLogEntry(db.Model):
     user = db.UserProperty(required=True)
     timestamp = db.DateTimeProperty(required=True, auto_now=True)
 
+    def getData(self):
+        return {'msg': self.msg, 'user': self.user.email(), 'timestamp': self.timestamp.__str__(), 'id': self.key().id()}
+
     @staticmethod
     def add_log(user, crossienum, msg):
         usercrossie = UserCrossie.all().filter('user', user).filter('crossienum', crossienum).get()
@@ -638,12 +641,48 @@ class Chat(webapp.RequestHandler):
             return
 
         CrossieChatLogEntry.add_log(user, crossienum, msg);
+        self.response.out.write(simplejson.dumps({'success': 1}))
+
+class ChatLog(webapp.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
+
+        user = users.get_current_user()
+        crossienum = self.request.get('crossienum')
+        if crossienum is None or len(crossienum) == 0:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'Crossienum should specified.'}))
+            return
+
+        crossienum = int(crossienum)
+        usercrossie = UserCrossie.all().filter('user', user).filter('crossienum', crossienum).get()
+        if usercrossie is None:
+            crossiedata = CrossieData(crossienum=crossienum, acl=[user])
+            crossiedata.put()
+            usercrossie = UserCrossie(crossienum=crossienum, user=user, crossiedata=crossiedata)
+            usercrossie.put()
+
+        crossiedata = usercrossie.crossiedata
+        query = CrossieChatLogEntry.all().filter('crossiedata', crossiedata)
+
+        since = self.request.get('since')
+        if since is not None and len(since) != 0:
+            since, temp = since.split('.')
+            since = datetime.datetime.strptime(since, '%Y-%m-%d %H:%M:%S')
+            query.filter('timestamp >', since);
+
+        chatlog = []
+        for chatentry in query:
+            chatlog.append(chatentry.getData())
+
+        self.response.out.write(simplejson.dumps({'chatlog': chatlog}))
 
 application = webapp.WSGIApplication([('/api/v1/getcrossiemetadata', GetCrossieMetaData),
         ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/crossie', Crossie),
         ('/api/v1/crossieupdates', CrossieUpdates), ('/api/v1/channel', Channel),
         ('/api/v1/share', Share), ('/api/v1/sharelist', ShareList),
-        ('/api/v1/share/accept', AcceptShare), ('/api/v1/chat', Chat)])
+        ('/api/v1/share/accept', AcceptShare), ('/api/v1/chat', Chat),
+        ('/api/v1/chat/log', ChatLog)])
 
 if __name__ == "__main__":
     run_wsgi_app(application)
