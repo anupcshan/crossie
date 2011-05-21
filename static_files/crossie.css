@@ -110,6 +110,10 @@ table {
     float: left;
 }
 
+.chatinput.default {
+    color: gray;
+}
+
 .chatinputsubmit {
     float: left;
     height: 23px;

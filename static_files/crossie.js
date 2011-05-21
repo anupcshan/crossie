@@ -833,6 +833,10 @@ function checkLoggedIn() {
 }
 
 function attachChatInputHandler() {
+    $('#chatinput').val('Type message here');
+    $('#chatinput').addClass('default');
+    $('#chatinput').focus(chatInputFocusHandler);
+    $('#chatinput').blur(chatInputBlurHandler);
     $('#chatform').submit(chatInputHandler);
 }
 
@@ -845,4 +849,18 @@ function chatInputHandler(data) {
             success: function(data) {getCrossieChatLogUpdatesCallback(data);}, error: checkLoggedIn});
 
     $('#chatinput').val('');
+}
+
+function chatInputFocusHandler() {
+    if ($(this).hasClass('default')) {
+        $(this).removeClass('default');
+        $(this).val('');
+    }
+}
+
+function chatInputBlurHandler() {
+    if ($(this).val().length == 0) {
+        $(this).addClass('default');
+        $(this).val('Type message here');
+    }
 }
