@@ -23,6 +23,7 @@ cluecells[ACROSS] = [];
 
 var global = {};
 global.chatlog = {};
+global.pingaudio = new Audio("static_files/ping.mp3");
 
 function startup() {
     if (! testLocalStorage()) {
@@ -134,6 +135,7 @@ function getCrossieChatLogUpdatesCallback(data) {
         // Need to sort and remove duplicates here.
         saveChatLogs();
         showChatWindow();
+        global.pingaudio.play();
     }
     else {
         var oldchatlogs = [];
