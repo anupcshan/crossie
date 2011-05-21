@@ -135,7 +135,9 @@ function getCrossieChatLogUpdatesCallback(data) {
         // Need to sort and remove duplicates here.
         saveChatLogs();
         showChatWindow();
-        global.pingaudio.play();
+        if (data.chat.user && data.chat.user != username) {
+            global.pingaudio.play();
+        }
     }
     else {
         var oldchatlogs = [];
