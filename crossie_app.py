@@ -178,6 +178,8 @@ class CrossieChatLogEntry(db.Model):
                     # Does not matter if all collaborators don't get the message
                     pass
 
+        return chatlogentry
+
 def getpixel(img, x, y):
     x = int(x)
     y = int(y)
@@ -641,8 +643,8 @@ class Chat(webapp.RequestHandler):
             self.response.out.write(simplejson.dumps({'error': 'Message should specified.'}))
             return
 
-        CrossieChatLogEntry.add_log(user, crossienum, msg);
-        self.response.out.write(simplejson.dumps({'success': 1}))
+        chatlogentry = CrossieChatLogEntry.add_log(user, crossienum, msg)
+        self.response.out.write(simplejson.dumps({'chat': chatlogentry.getData(), 'crossienum': crossienum}))
 
 class ChatLog(webapp.RequestHandler):
     def get(self):

@@ -37,6 +37,7 @@ function startup() {
     getChannel();
     getShares();
     checkLoggedIn();
+    attachChatInputHandler();
 }
 
 function runCrossie(noReload) {
@@ -829,4 +830,19 @@ function checkLoggedIn() {
                     }
                 }
             });
+}
+
+function attachChatInputHandler() {
+    $('#chatform').submit(chatInputHandler);
+}
+
+function chatInputHandler(data) {
+    var chattext = $('#chatinput').val();
+    if (chattext.length <= 0)
+        return;
+
+    $.ajax({url: '/api/v1/chat', type: 'POST', data: {'crossienum': crossienum, 'msg': chattext},
+            success: function(data) {getCrossieChatLogUpdatesCallback(data);}, error: checkLoggedIn});
+
+    $('#chatinput').val('');
 }

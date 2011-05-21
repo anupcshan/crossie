@@ -103,10 +103,18 @@ table {
 }
 
 .chatinput {
-    width: 250px;
+    width: 240px;
     border: hidden;
     padding-top: 4px;
     height: 22px;
+    float: left;
+}
+
+.chatinputsubmit {
+    float: left;
+    height: 23px;
+    width: 54px;
+    margin-left: 1px;
 }
 
 .cluesinner {
