@@ -1,4 +1,4 @@
-currentdbversion = 1;
+currentdbversion = 2;
 characters = {};
 crossielist = {};
 cluecells = {};
@@ -120,7 +120,16 @@ function getCrossieDataCallback(data, doRunCrossie) {
 
 function getCrossieChatLogCallback(data) {
     if (crossienum == data.crossienum) {
-        global.chatlog = data.chatlog;
+        global.chatlog = global.chatlog.concat(data.chatlog);
+
+        global.chatlog.sort(function(a, b) { return a.timestamp - b.timestamp; });
+        for (var i = 0; i < global.chatlog.length - 1; i ++) {
+            if (global.chatlog[i].id == global.chatlog[i+1].id) {
+                global.chatlog.splice(i, 1);
+                i --;
+            }
+        }
+
         saveChatLogs();
         showChatWindow();
     }
@@ -132,7 +141,6 @@ function getCrossieChatLogCallback(data) {
 function getCrossieChatLogUpdatesCallback(data) {
     if (crossienum == data.crossienum) {
         global.chatlog.push(data.chat);
-        // Need to sort and remove duplicates here.
         saveChatLogs();
         showChatWindow();
         if (data.chat.user && data.chat.user != username) {
@@ -143,7 +151,7 @@ function getCrossieChatLogUpdatesCallback(data) {
         var oldchatlogs = [];
         if (localStorage.getItem(data.crossienum + "chatlog") != "")
             oldchatlogs = JSON.parse(localStorage.getItem(data.crossienum + "chatlog"));
-        oldchatlogs.append(data.chat);
+        oldchatlogs.push(data.chat);
         localStorage.setItem(data.crossienum + "chatlog", oldchatlogs);
     }
 }
@@ -483,9 +491,17 @@ function loadLocalStorageValues(noReload) {
         crossiedate = crossie.crossiedate || crossiedate;
     }
 
+    global.chatlog = JSON.parse(localStorage.getItem(crossienum + "chatlog")) || [];
+
     if (! noReload) {
         $.ajax({url: '/api/v1/crossie', data: {'crossienum': crossienum}, success: function(data) {getCrossieDataCallback(data, true);}, error: checkLoggedIn});
-        $.ajax({url: '/api/v1/chat/log', data: {'crossienum': crossienum}, success: function(data) {getCrossieChatLogCallback(data, true);}, error: checkLoggedIn});
+        if (global.chatlog.length > 0) {
+            var lastchattimestamp = global.chatlog[global.chatlog.length - 1].timestamp;
+            $.ajax({url: '/api/v1/chat/log', data: {'crossienum': crossienum, since: lastchattimestamp}, success: function(data) {getCrossieChatLogCallback(data, true);}, error: checkLoggedIn});
+        }
+        else {
+            $.ajax({url: '/api/v1/chat/log', data: {'crossienum': crossienum}, success: function(data) {getCrossieChatLogCallback(data, true);}, error: checkLoggedIn});
+        }
     }
     return 1;
 }
