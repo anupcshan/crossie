@@ -71,6 +71,42 @@ table {
     height: 93%;
     width: 300px;
     float: right;
+    padding-top: 20px;
+    font-family: sans-serif;
+    font-size: 14px;
+    position: relative;
+}
+
+.chatlog {
+    background-color: #ddddff;
+    position: absolute;
+    top: 0;
+    bottom: 27px;
+    left: 0;
+    right: 0;
+    padding: 5px;
+    border: 1px dashed black;
+    overflow-y: auto;
+}
+
+.chatinputdiv {
+    position: absolute;
+    height: 24px;
+    background-color: lightgreen;
+    padding-left: 2px;
+    padding-top: 2px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border: 1px dashed black;
+    border-top: none;
+}
+
+.chatinput {
+    width: 250px;
+    border: hidden;
+    padding-top: 4px;
+    height: 22px;
 }
 
 .cluesinner {

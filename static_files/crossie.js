@@ -21,6 +21,9 @@ dirn = ACROSS;
 cluecells[DOWN] = [];
 cluecells[ACROSS] = [];
 
+var global = {};
+global.chatlog = {};
+
 function startup() {
     if (! testLocalStorage()) {
         return;
@@ -110,6 +113,33 @@ function getCrossieDataCallback(data, doRunCrossie) {
         if (needToRewrite) {
             localStorage.setItem(data.crossienum, JSON.stringify(chrs));
         }
+    }
+}
+
+function getCrossieChatLogCallback(data) {
+    if (crossienum == data.crossienum) {
+        global.chatlog = data.chatlog;
+        saveChatLogs();
+        showChatWindow();
+    }
+    else {
+        localStorage.setItem(data.crossienum + "chatlog", data.chatlog);
+    }
+}
+
+function getCrossieChatLogUpdatesCallback(data) {
+    if (crossienum == data.crossienum) {
+        global.chatlog.push(data.chat);
+        // Need to sort and remove duplicates here.
+        saveChatLogs();
+        showChatWindow();
+    }
+    else {
+        var oldchatlogs = [];
+        if (localStorage.getItem(data.crossienum + "chatlog") != "")
+            oldchatlogs = JSON.parse(localStorage.getItem(data.crossienum + "chatlog"));
+        oldchatlogs.append(data.chat);
+        localStorage.setItem(data.crossienum + "chatlog", oldchatlogs);
     }
 }
 
@@ -360,8 +390,30 @@ function showClues() {
     $('.clue').click(handleClueClick);
 }
 
+function formatTimeString(timestampstring) {
+    var timestamp = new Date(parseInt(timestampstring));
+    var timestamptext = timestamp.getHours() + ":";
+    if (timestamp.getMinutes() < 10)
+        timestamptext += "0";
+    timestamptext += timestamp.getMinutes() + ":";
+    if (timestamp.getSeconds() < 10)
+        timestamptext += "0";
+    timestamptext += timestamp.getSeconds();
+
+    return timestamptext;
+}
+
 function showChatWindow() {
-    // TODO: Not implemented.
+    var chatlog = $('#chatlog');
+    $(chatlog).html('');
+    for (var i = 0; i < global.chatlog.length; i ++) {
+        var chatlogentry = global.chatlog[i];
+        var chatlogDiv = $('<div>');
+        var chatlogText = $('<span>');
+        chatlogText.text("(" + formatTimeString(chatlogentry.timestamp) + ") " + chatlogentry.user.split('@')[0] + ": " + chatlogentry.msg);
+        $(chatlogDiv).append(chatlogText);
+        $(chatlog).append(chatlogDiv);
+    }
 }
 
 function loadAndUpdateCrossieList() {
@@ -425,8 +477,10 @@ function loadLocalStorageValues(noReload) {
         crossiedate = crossie.crossiedate || crossiedate;
     }
 
-    if (! noReload)
+    if (! noReload) {
         $.ajax({url: '/api/v1/crossie', data: {'crossienum': crossienum}, success: function(data) {getCrossieDataCallback(data, true);}, error: checkLoggedIn});
+        $.ajax({url: '/api/v1/chat/log', data: {'crossienum': crossienum}, success: function(data) {getCrossieChatLogCallback(data, true);}, error: checkLoggedIn});
+    }
     return 1;
 }
 
@@ -440,6 +494,10 @@ function saveCrossie() {
 
 function saveLocalStorageValues() {
     localStorage.setItem(crossienum, JSON.stringify({characters: characters, acl: acl}));
+}
+
+function saveChatLogs() {
+    localStorage.setItem(crossienum + "chatlog", JSON.stringify(global.chatlog));
 }
 
 function highlightClue(cluenum, dirn) {
@@ -586,6 +644,8 @@ function switchCrossies() {
     crossiedate = JSON.parse($(this).val()).date;
     author = null;
     across = down = startpos = matrix = {};
+    acl = [];
+    global.chatlog = [];
     runCrossie();
 }
 
@@ -683,7 +743,7 @@ function getChannelCallback(data) {
             showShare(msg.sharedcrossie);
         }
         else if (msg.chat) {
-            // console.log('Chat message: ', msg.chat);
+            getCrossieChatLogUpdatesCallback(msg);
         }
     };
     socket.onerror = function(data) {

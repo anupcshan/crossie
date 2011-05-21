@@ -154,7 +154,8 @@ class CrossieChatLogEntry(db.Model):
     timestamp = db.DateTimeProperty(required=True, auto_now=True)
 
     def getData(self):
-        return {'msg': self.msg, 'user': self.user.email(), 'timestamp': self.timestamp.__str__(), 'id': self.key().id()}
+        formattedtimestamp = long(self.timestamp.strftime('%s')) * 1000 + self.timestamp.microsecond / 1000
+        return {'msg': self.msg, 'user': self.user.email(), 'timestamp': formattedtimestamp.__str__(), 'id': self.key().id()}
 
     @staticmethod
     def add_log(user, crossienum, msg):
@@ -172,7 +173,7 @@ class CrossieChatLogEntry(db.Model):
         for usr in crossiedata.acl:
             if usr != user:
                 try:
-                    channel.send_message(usr.user_id(), simplejson.dumps({'chat': {'msg': msg, 'crossienum': crossienum, 'user': user.email()}}))
+                    channel.send_message(usr.user_id(), simplejson.dumps({'chat': chatlogentry.getData(), 'crossienum': crossienum}))
                 except:
                     # Does not matter if all collaborators don't get the message
                     pass
@@ -663,19 +664,20 @@ class ChatLog(webapp.RequestHandler):
             usercrossie.put()
 
         crossiedata = usercrossie.crossiedata
-        query = CrossieChatLogEntry.all().filter('crossiedata', crossiedata)
+        query = CrossieChatLogEntry.all().filter('crossiedata', crossiedata).order('timestamp')
 
         since = self.request.get('since')
         if since is not None and len(since) != 0:
-            since, temp = since.split('.')
-            since = datetime.datetime.strptime(since, '%Y-%m-%d %H:%M:%S')
+            since, microsec = since.split('.')
+            microsec = long(microsec)
+            since = datetime.datetime.strptime(since, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(microseconds=microsec)
             query.filter('timestamp >', since);
 
         chatlog = []
         for chatentry in query:
             chatlog.append(chatentry.getData())
 
-        self.response.out.write(simplejson.dumps({'chatlog': chatlog}))
+        self.response.out.write(simplejson.dumps({'chatlog': chatlog, 'crossienum': crossienum}))
 
 application = webapp.WSGIApplication([('/api/v1/getcrossiemetadata', GetCrossieMetaData),
         ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/crossie', Crossie),
