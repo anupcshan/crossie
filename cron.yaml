@@ -1,5 +1,5 @@
 cron:
 - description: Download daily crossie
   url: /admin/v1/fetchtodayscrossie
-  schedule: every day 05:00
+  schedule: every day 04:00
   timezone: Asia/Kolkata

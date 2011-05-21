@@ -38,7 +38,7 @@ class CheckDB(webapp.RequestHandler):
 class FetchTodaysCrossie(webapp.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'application/json'
-        today = datetime.datetime.today()
+        today = datetime.datetime.now() + datetime.timedelta(minutes=330)
         year = today.year
         month = today.month
         day = today.day

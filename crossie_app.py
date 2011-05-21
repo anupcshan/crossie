@@ -348,7 +348,7 @@ class GetCrossieMetaData(webapp.RequestHandler):
             month = int(month)
             day = int(day)
         else:
-            today = datetime.datetime.today()
+            today = datetime.datetime.now() + datetime.timedelta(minutes=330)
             year = today.year
             month = today.month
             day = today.day
