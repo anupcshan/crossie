@@ -415,6 +415,7 @@ function showChatWindow() {
         $(chatlogDiv).append(chatlogText);
         $(chatlog).append(chatlogDiv);
     }
+    chatlog.scrollTop(chatlog[0].scrollHeight);
 }
 
 function loadAndUpdateCrossieList() {
