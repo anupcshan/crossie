@@ -396,7 +396,7 @@ function showClues() {
 }
 
 function formatTimeString(timestampstring) {
-    var timestamp = new Date(parseInt(timestampstring));
+    var timestamp = new Date(parseInt(timestampstring) / 1000);
     var timestamptext = timestamp.getHours() + ":";
     if (timestamp.getMinutes() < 10)
         timestamptext += "0";

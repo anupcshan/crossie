@@ -154,7 +154,7 @@ class CrossieChatLogEntry(db.Model):
     timestamp = db.DateTimeProperty(required=True, auto_now=True)
 
     def getData(self):
-        formattedtimestamp = long(self.timestamp.strftime('%s')) * 1000 + self.timestamp.microsecond / 1000
+        formattedtimestamp = long(self.timestamp.strftime('%s')) * 1000000L + self.timestamp.microsecond
         return {'msg': self.msg, 'user': self.user.email(), 'timestamp': formattedtimestamp.__str__(), 'id': self.key().id()}
 
     @staticmethod
@@ -670,9 +670,9 @@ class ChatLog(webapp.RequestHandler):
 
         since = self.request.get('since')
         if since is not None and len(since) != 0:
-            since, microsec = since.split('.')
-            microsec = long(microsec)
-            since = datetime.datetime.strptime(since, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(microseconds=microsec)
+            timestamp = long(since)
+            seconds, microsec = divmod(timestamp, 1000000L)
+            since = datetime.datetime.fromtimestamp(seconds) + datetime.timedelta(microseconds=microsec)
             query.filter('timestamp >', since);
 
         chatlog = []
