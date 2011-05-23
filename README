@@ -1,14 +1,11 @@
 Crossie
 =======
 
-Bunch of scripts used to scrape The Daily Hindu Crossword from their website.
-Currently their site does not allow one to try and solve it online.
-This program is meant to present the crossie in a form which can be solved on a computer.
+Web application to solve the Daily Hindu Crossword online.
+This application is written in Python/JavaScript and deployed on the Google App Engine.
 
-How to use
-----------
-- Run ./crossie yyyy mm dd > matrix.js
-		where dd/mm/yyyy is the date of the crossword.
-- Open index.html in Chrome. (currently not supported in any other browser,
-		requires HTML LocalStorage support)
-- Crossword state is maintained across tab/browser closing.
+List of features
+----------------
+* Save status online
+* Collaborate with other users in real time
+* In-app chat with other collaborators
