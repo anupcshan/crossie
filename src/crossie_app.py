@@ -50,6 +50,14 @@ class CrossieData(db.Model):
                 list[x.__str__() + ',' + y.__str__()] = self.characters[i]
         return list
 
+    def getCharactersAsUpdates(self):
+        updates = []
+        for i in range(0, len(self.characters)):
+            if self.characters[i] != '':
+                x, y = divmod(i, 15)
+                updates.append({'pos': x.__str__() + ',' + y.__str__(), 'char': self.characters[i]})
+        return updates
+
     @staticmethod
     def getAndUpdateCrossie(crossieid, user, updates):
         crossiedata = CrossieData.get_by_id(crossieid)
@@ -72,6 +80,15 @@ class CrossieData(db.Model):
             crossiedata.characters[intpos] = char
 
         crossiedata.put()
+        
+        for usr in crossiedata.acl:
+            if usr != user:
+                try:
+                    channel.send_message(usr.user_id(), simplejson.dumps({'crossieupdate': {'updates': updates, 'crossienum': crossiedata.crossienum}}))
+                except:
+                    # Does not matter if all collabs don't get the message
+                    pass
+
         return crossiedata
 
 class UserCrossie(db.Model):
@@ -451,13 +468,6 @@ class Crossie(webapp.RequestHandler):
 
         if crossiedata is not None:
             self.response.out.write(crossiedata.getJSON())
-            for usr in crossiedata.acl:
-                if usr != user:
-                    try:
-                        channel.send_message(usr.user_id(), simplejson.dumps({'crossieupdate': {'updates': updates, 'crossienum': crossienum}}))
-                    except:
-                        # Does not matter if all collabs don't get the message
-                        pass
 
 class CrossieUpdates(webapp.RequestHandler):
     def get(self):
@@ -618,9 +628,12 @@ class AcceptShare(webapp.RequestHandler):
             usercrossie = UserCrossie(crossienum=sharecrossie.crossienum, user=user, crossiedata=crossiedata)
             usercrossie.put()
         else:
+            characters = usercrossie.crossiedata.getCharactersAsUpdates()
             usercrossie.crossiedata.acl.remove(user)
+            usercrossie.crossiedata.put()
             usercrossie.crossiedata = crossiedata
             usercrossie.put()
+            CrossieData.getAndUpdateCrossie(crossiedata.key().id(), user, characters)
 
         sharecrossie.delete()
         self.response.out.write(simplejson.dumps({'success': 1, 'crossie': crossiedata.getData()}))
