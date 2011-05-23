@@ -47,6 +47,9 @@ class FetchTodaysCrossie(webapp.RequestHandler):
         
 class FetchLoggedInUsers(webapp.RequestHandler):
     def get(self):
+        for token in UserToken.all().filter('created <=', datetime.datetime.now() - datetime.timedelta(hours=2)):
+            token.delete()
+
         userlist = []
         for token in UserToken.all().filter('created >', datetime.datetime.now() - datetime.timedelta(hours=2)):
             userlist.append(token.user.email())
