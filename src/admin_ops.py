@@ -44,9 +44,18 @@ class FetchTodaysCrossie(webapp.RequestHandler):
         day = today.day
         metadata = fetchpage(year, month, day)
         self.response.out.write(metadata)
+        
+class FetchLoggedInUsers(webapp.RequestHandler):
+    def get(self):
+        userlist = []
+        for token in UserToken.all().filter('created >', datetime.datetime.now() - datetime.timedelta(hours=2)):
+            userlist.append(token.user.email())
+
+        self.response.out.write(simplejson.dumps({'loggedInUsers': userlist}))
 
 application = webapp.WSGIApplication([('/admin/v1/clearmemcache', FlushMemcache), ('/admin/v1/checkdb', CheckDB),
-                                      ('/admin/v1/fetchtodayscrossie', FetchTodaysCrossie)])
+                                      ('/admin/v1/fetchtodayscrossie', FetchTodaysCrossie),
+                                      ('/admin/v1/fetchloggedinusers', FetchLoggedInUsers)])
 
 if __name__ == "__main__":
     run_wsgi_app(application)
