@@ -190,16 +190,20 @@ table {
     margin-left: 5px;
 }
 
-.debuglog {
+.debugcontainer {
 	display: none;
 	height: 300px;
 	border: 1px dashed black;
 	margin-top: 20px;
 	background-color: lightyellow;
 	word-wrap: break-word;
-	overflow-y: auto;
 	font-family: Arial;
 	font-size: 14px;
+}
+
+.debuglog {
+	height: 274px;
+	overflow-y: auto;
 }
 
 .debugentry {
@@ -213,4 +217,9 @@ table {
 
 .debugentry.info {
 	color: green;
+}
+
+.debuginput {
+	width: 99%;
+	margin-left: 2px;
 }

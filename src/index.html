@@ -13,7 +13,13 @@
             <div id="mainpage" class="mainpage">
                 <div id="tablediv" class="tablediv">
                 	<div id="tables"></div>
-                	<div id="debug" class="debuglog"></div>
+                	<div id="debugcontainer" class="debugcontainer">
+                		<div id="debug" class="debuglog"></div>
+                		<form id="debugform" action="javascript:;">
+                			<input type="text" id="debuginput" class="debuginput"></input>
+                			<input type="submit" id="debuginputsubmit" style="display: none;"></input>
+                		</form>
+                	</div>
                 </div>
                 <div id="chat" class="chatdiv">
                     <div id="chatlog" class="chatlog"></div>

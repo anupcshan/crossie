@@ -49,6 +49,11 @@ LogLevel = {'INFO': 'info', 'ERROR': 'error'};
 
 $.log = function(level, msg) {
 	if ($('#debug').length > 0) {
+		if ((typeof(msg)).toLowerCase() != "string") {
+			// If logged data is not a string, JSON-ify it
+			// to give better info.
+			msg = JSON.stringify(msg);
+		}
 		$('#debug').append($('<div>')
 				   .addClass(level)
 				   .addClass('debugentry')
@@ -68,13 +73,13 @@ $.error = function(msg) {
 }
 
 $.enablelog = function() {
-	if ($('#debug').length > 0) {
-		$('#debug').css('display', 'block');
+	if ($('#debugcontainer').length > 0) {
+		$('#debugcontainer').css('display', 'block');
 	}
 }
 
 $.disablelog = function() {
-	$('#debug').css('display', 'none');
+	$('#debugcontainer').css('display', 'none');
 }
 
 function startup() {
@@ -91,6 +96,7 @@ function startup() {
     getShares();
     checkLoggedIn();
     attachChatInputHandler();
+    attachDebugInputHandler();
 }
 
 function runCrossie(noReload) {
@@ -951,4 +957,23 @@ function chatInputBlurHandler() {
         $(this).addClass('default');
         $(this).val('Type message here');
     }
+}
+
+function attachDebugInputHandler() {
+    $('#debugform').submit(debugInputHandler);
+    $.info('Attached debug handler.');
+}
+
+function debugInputHandler(data) {
+    var debugtext = $('#debuginput').val();
+    if (debugtext.length <= 0)
+        return;
+
+    try {
+    	var evaloutput = eval(debugtext);
+        $.info(evaloutput);
+    } catch (e) {
+    	$.error(e);
+    }
+    $('#debuginput').val('');
 }
