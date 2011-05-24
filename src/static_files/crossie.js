@@ -816,7 +816,17 @@ function acceptShareCallback(data) {
 }
 
 function declineShare(data) {
-    // console.log('Doing cancel share operation...');
+    $.ajax({url: '/api/v1/share/decline', data: {'shareId': data.shareId}, type: 'POST', success: declineShareCallback, error: checkLoggedIn});
+}
+
+function declineShareCallback(data) {
+    if (data.error) {
+        alert('Declining share failed : ' + data.error);
+        return;
+    }
+    if (data.success) {
+        alert('Successfully removed share invitation.');
+    }
 }
 
 function showShare(data) {

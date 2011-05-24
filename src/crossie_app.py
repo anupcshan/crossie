@@ -80,7 +80,7 @@ class CrossieData(db.Model):
             crossiedata.characters[intpos] = char
 
         crossiedata.put()
-        
+
         for usr in crossiedata.acl:
             if usr != user:
                 try:
@@ -638,6 +638,32 @@ class AcceptShare(webapp.RequestHandler):
         sharecrossie.delete()
         self.response.out.write(simplejson.dumps({'success': 1, 'crossie': crossiedata.getData()}))
 
+class DeclineShare(webapp.RequestHandler):
+    def post(self):
+        self.response.headers['Content-Type'] = 'application/json'
+
+        user = users.get_current_user()
+        shareId = self.request.get('shareId')
+        if shareId is None or len(shareId) == 0:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'ShareId should specified.'}))
+            return
+
+        shareId = long(shareId)
+        sharecrossie = ShareCrossie.get_by_id(shareId)
+        if sharecrossie is None:
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'Shared crossie does not exist.'}))
+            return
+
+        if sharecrossie.sharee != user.email().lower():
+            # Cannot proceed
+            self.response.out.write(simplejson.dumps({'error': 'No permission to access shared crossie.'}))
+            return
+
+        sharecrossie.delete()
+        self.response.out.write(simplejson.dumps({'success': 1}))
+
 class Chat(webapp.RequestHandler):
     def post(self):
         self.response.headers['Content-Type'] = 'application/json'
@@ -698,8 +724,8 @@ application = webapp.WSGIApplication([('/api/v1/getcrossiemetadata', GetCrossieM
         ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/crossie', Crossie),
         ('/api/v1/crossieupdates', CrossieUpdates), ('/api/v1/channel', Channel),
         ('/api/v1/share', Share), ('/api/v1/sharelist', ShareList),
-        ('/api/v1/share/accept', AcceptShare), ('/api/v1/chat', Chat),
-        ('/api/v1/chat/log', ChatLog)])
+        ('/api/v1/share/accept', AcceptShare), ('/api/v1/share/decline', DeclineShare),
+        ('/api/v1/chat', Chat), ('/api/v1/chat/log', ChatLog)])
 
 if __name__ == "__main__":
     run_wsgi_app(application)
