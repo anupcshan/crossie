@@ -189,3 +189,28 @@ table {
     vertical-align: super;
     margin-left: 5px;
 }
+
+.debuglog {
+	display: none;
+	height: 300px;
+	border: 1px dashed black;
+	margin-top: 20px;
+	background-color: lightyellow;
+	word-wrap: break-word;
+	overflow-y: auto;
+	font-family: Arial;
+	font-size: 14px;
+}
+
+.debugentry {
+	padding: 2px 5px;
+	border-bottom: 1px dashed black;
+}
+
+.debugentry.error {
+	color: red;
+}
+
+.debugentry.info {
+	color: green;
+}

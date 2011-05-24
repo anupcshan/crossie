@@ -30,6 +30,7 @@ crossiedate = null;
 var crossienum;
 pendingupdates = {};
 var username = null;
+var isadmin = 0;
 var channel = null;
 var socket = null;
 acl = [];
@@ -43,6 +44,38 @@ cluecells[ACROSS] = [];
 var global = {};
 global.chatlog = {};
 global.pingaudio = new Audio("static_files/ping.mp3");
+
+LogLevel = {'INFO': 'info', 'ERROR': 'error'};
+
+$.log = function(level, msg) {
+	if ($('#debug').length > 0) {
+		$('#debug').append($('<div>')
+				   .addClass(level)
+				   .addClass('debugentry')
+				   .text(level.toUpperCase() + ': ' + msg));
+	}
+	else if (console && console.log) {
+		console.log(msg);
+	}
+};
+
+$.info = function(msg) {
+	$.log(LogLevel.INFO, msg);
+}
+
+$.error = function(msg) {
+	$.log(LogLevel.ERROR, msg);
+}
+
+$.enablelog = function() {
+	if ($('#debug').length > 0) {
+		$('#debug').css('display', 'block');
+	}
+}
+
+$.disablelog = function() {
+	$('#debug').css('display', 'none');
+}
 
 function startup() {
     if (! testLocalStorage()) {
@@ -874,6 +907,11 @@ function checkLoggedIn() {
     $.ajax({url: '/public/v1/myinfo', success: function(data) {
                     if (data.user) {
                         username = data.user;
+                        isadmin = data.isadmin;
+
+                        if (isadmin) {
+                        	$.enablelog();
+                        }
                     }
                     else if (data.login) {
                         window.location = data.login;

@@ -31,7 +31,8 @@ class GetUserInfo(webapp.RequestHandler):
         if user is None:
             self.response.out.write(simplejson.dumps({'login': users.create_login_url("/")}))
         else:
-            self.response.out.write(simplejson.dumps({'user': user.email()}))
+            isadmin = users.is_current_user_admin()
+            self.response.out.write(simplejson.dumps({'user': user.email(), 'isadmin': isadmin}))
 
 application = webapp.WSGIApplication([('/public/v1/myinfo', GetUserInfo)])
 
