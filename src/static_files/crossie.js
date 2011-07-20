@@ -48,38 +48,38 @@ global.pingaudio = new Audio("static_files/ping.mp3");
 LogLevel = {'INFO': 'info', 'ERROR': 'error'};
 
 $.log = function(level, msg) {
-	if ($('#debug').length > 0) {
-		if ((typeof(msg)).toLowerCase() != "string") {
-			// If logged data is not a string, JSON-ify it
-			// to give better info.
-			msg = JSON.stringify(msg);
-		}
-		$('#debug').append($('<div>')
-				   .addClass(level)
-				   .addClass('debugentry')
-				   .text(level.toUpperCase() + ': ' + msg));
-	}
-	else if (console && console.log) {
-		console.log(msg);
-	}
+    if ($('#debug').length > 0) {
+        if ((typeof(msg)).toLowerCase() != "string") {
+            // If logged data is not a string, JSON-ify it
+            // to give better info.
+            msg = JSON.stringify(msg);
+        }
+        $('#debug').append($('<div>')
+                   .addClass(level)
+                   .addClass('debugentry')
+                   .text(level.toUpperCase() + ': ' + msg));
+    }
+    else if (console && console.log) {
+        console.log(msg);
+    }
 };
 
 $.info = function(msg) {
-	$.log(LogLevel.INFO, msg);
+    $.log(LogLevel.INFO, msg);
 }
 
 $.error = function(msg) {
-	$.log(LogLevel.ERROR, msg);
+    $.log(LogLevel.ERROR, msg);
 }
 
 $.enablelog = function() {
-	if ($('#debugcontainer').length > 0) {
-		$('#debugcontainer').css('display', 'block');
-	}
+    if ($('#debugcontainer').length > 0) {
+        $('#debugcontainer').css('display', 'block');
+    }
 }
 
 $.disablelog = function() {
-	$('#debugcontainer').css('display', 'none');
+    $('#debugcontainer').css('display', 'none');
 }
 
 function startup() {
@@ -490,24 +490,24 @@ function showChatWindow() {
 }
 
 function showCollabs() {
-	var collabsdiv = $('#collabs');
-	$(collabsdiv).html();
+    var collabsdiv = $('#collabs');
+    $(collabsdiv).html();
 
-	var collabs = [];
-	$.info('username: ' + username);
-	for (var i = 0; i < acl.length; i ++) {
-		$.info('acl[' + i + ']: ' + acl[i]);
-		if (acl[i] != username) {
-			collabs.push(acl[i].split('@')[0]);
-		}
-	}
+    var collabs = [];
+    $.info('username: ' + username);
+    for (var i = 0; i < acl.length; i ++) {
+        $.info('acl[' + i + ']: ' + acl[i]);
+        if (acl[i] != username) {
+            collabs.push(acl[i].split('@')[0]);
+        }
+    }
 
-	if (collabs.length != 0) {
-		$(collabsdiv).html('Shared with ' + collabs.join(', '));
-	}
-	else {
-		$(collabsdiv).html('Not shared with anyone.');
-	}
+    if (collabs.length != 0) {
+        $(collabsdiv).html('Shared with ' + collabs.join(', '));
+    }
+    else {
+        $(collabsdiv).html('Not shared with anyone.');
+    }
 }
 
 function loadAndUpdateCrossieList() {
@@ -938,7 +938,7 @@ function checkLoggedIn() {
                         isadmin = data.isadmin;
 
                         if (isadmin) {
-                        	$.enablelog();
+                            $.enablelog();
                         }
 
                         showCollabs();
@@ -994,10 +994,10 @@ function debugInputHandler(data) {
         return;
 
     try {
-    	var evaloutput = eval(debugtext);
+        var evaloutput = eval(debugtext);
         $.info(evaloutput);
     } catch (e) {
-    	$.error(e);
+        $.error(e);
     }
     $('#debuginput').val('');
 }
