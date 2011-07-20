@@ -249,6 +249,7 @@ function renderPage() {
     showTable();
     showClues();
     showChatWindow();
+    showCollabs();
 }
 
 function testLocalStorage() {
@@ -486,6 +487,27 @@ function showChatWindow() {
         $(chatlog).append(chatlogDiv);
     }
     chatlog.scrollTop(chatlog[0].scrollHeight);
+}
+
+function showCollabs() {
+	var collabsdiv = $('#collabs');
+	$(collabsdiv).html();
+
+	var collabs = [];
+	$.info('username: ' + username);
+	for (var i = 0; i < acl.length; i ++) {
+		$.info('acl[' + i + ']: ' + acl[i]);
+		if (acl[i] != username) {
+			collabs.push(acl[i].split('@')[0]);
+		}
+	}
+
+	if (collabs.length != 0) {
+		$(collabsdiv).html('Shared with ' + collabs.join(', '));
+	}
+	else {
+		$(collabsdiv).html('Not shared with anyone.');
+	}
 }
 
 function loadAndUpdateCrossieList() {
@@ -918,6 +940,8 @@ function checkLoggedIn() {
                         if (isadmin) {
                         	$.enablelog();
                         }
+
+                        showCollabs();
                     }
                     else if (data.login) {
                         window.location = data.login;

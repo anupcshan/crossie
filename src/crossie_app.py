@@ -737,6 +737,18 @@ class ChatLog(webapp.RequestHandler):
 
         self.response.out.write(simplejson.dumps({'chatlog': chatlog, 'crossienum': crossienum}))
 
+class Ping(webapp.RequestHandler):
+    def post(self):
+        self.response.headers['Content-Type'] = 'application/json'
+
+        user = users.get_current_user()
+        usertoken = UserToken.get_or_insert_token(user)
+        # Update last used timestamp
+        usertoken.put()
+
+        self.response.out.write(simplejson.dumps({'success': 1}))
+        pass
+
 application = webapp.WSGIApplication([('/api/v1/getcrossiemetadata', GetCrossieMetaData),
         ('/api/v1/getcrossielist', GetCrossieList), ('/api/v1/crossie', Crossie),
         ('/api/v1/crossieupdates', CrossieUpdates), ('/api/v1/channel', Channel),
