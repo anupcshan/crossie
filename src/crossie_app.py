@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from google.appengine.api.images import *
+from google.appengine.api.images import Image, PNG
 from google.appengine.ext import db
 from google.appengine.api import memcache
 from google.appengine.ext import webapp
@@ -25,7 +25,6 @@ from google.appengine.api import users
 from google.appengine.api import channel
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-import sys
 import re
 import urllib2
 import datetime
@@ -302,7 +301,6 @@ def fetchAndProcessImage(imgurl):
     return matrix, startpos
 
 def fetchpage(year, month, day):
-    filename = (((year * 100 + month) * 100) + day) * 100000000 + 99951000
     mainpage = "http://www.thehindu.com/todays-paper/tp-index/?date=" + year.__str__().zfill(4) + "-" + month.__str__().zfill(2) + "-" + day.__str__().zfill(2)
     logging.info('Main Page: %s', mainpage)
 
@@ -433,7 +431,7 @@ class GetCrossieList(webapp.RequestHandler):
         q = CrossieMetaData.all()
         since = self.request.get('since')
         if since is not None and len(since) != 0:
-            since, temp = since.split('.')
+            since = since.split('.')[0]
             since = datetime.datetime.strptime(since, '%Y-%m-%d %H:%M:%S')
             q.filter('updated >=', since)
 
@@ -524,7 +522,7 @@ class CrossieUpdates(webapp.RequestHandler):
         since = self.request.get('since')
         q = CrossieData.all()
         if since is not None and len(since) != 0:
-            since, temp = since.split('.')
+            since = since.split('.')[0]
             since = datetime.datetime.strptime(since, '%Y-%m-%d %H:%M:%S')
             q.filter('updated >=', since)
 
