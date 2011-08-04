@@ -323,6 +323,7 @@ def fetchpage(year, month, day):
     crossienum = None
     author = None
     isacross = True
+    prevline = None
 
     for line in page:
         if crossienum == None:
@@ -333,7 +334,15 @@ def fetchpage(year, month, day):
                 logging.info('Author line: %s', line)
                 author = re.search('">([^<]*)<', line).groups()[0]
         for subline in line.split('</p>'):
+            if prevline is not None:
+                subline = prevline + subline
+                logging.info('Modified line: %s', subline)
             if re.search('<p class="body">[0-9]', subline):
+                if re.search('<p class="body">([0-9][0-9]*)(.*) (\([0-9,-]*\))', subline) is None:
+                    prevline = subline
+                    continue
+                else:
+                    prevline = None
                 logging.info('Clue line: %s', subline)
                 cnum, clue, chars = re.search('<p class="body">([0-9][0-9]*)(.*) (\([0-9,-]*\))', subline).groups()
                 cnum = int(cnum)
