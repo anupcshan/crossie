@@ -327,8 +327,9 @@ def fetchpage(year, month, day):
 
     for line in page:
         if crossienum == None:
-            if re.search('"detail-title">The Hindu Crossword [0-9][0-9]*<', line):
-                crossienum = int(re.search('The Hindu Crossword [^0-9]*([0-9][0-9]*)', line).groups()[0])
+            if re.search('"detail-title">The Hindu Crossword.*[0-9][0-9]*<', line):
+                logging.info('Crossienum line: %s', line)
+                crossienum = int(re.search('The Hindu Crossword[^0-9]*([0-9][0-9]*)', line).groups()[0])
         if author == None:
             if re.search('<span class="author">', line):
                 logging.info('Author line: %s', line)
