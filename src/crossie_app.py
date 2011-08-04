@@ -32,6 +32,7 @@ import datetime
 import png
 import StringIO
 import simplejson
+import logging
 
 class PermissionDeniedException(Exception):
     pass
@@ -219,11 +220,7 @@ def getpixel(img, x, y):
     y = int(y)
     return img[y][x * 4]
 
-def fetchpage(year, month, day):
-    filename = (((year * 100 + month) * 100) + day) * 100000000 + 99951000
-    pageurl = "http://www.hindu.com/thehindu/thscrip/print.pl?file=" + filename.__str__() + ".htm&date=" + year.__str__().zfill(4) + "/" + month.__str__().zfill(2) +"/" + day.__str__().zfill(2) + "/&prd=th&"
-    imgurl = "http://www.hindu.com/" + year.__str__().zfill(4) + "/" + month.__str__().zfill(2) +"/" + day.__str__().zfill(2) + "/images/" + (filename + 1).__str__() + ".jpg"
-
+def fetchAndProcessImage(imgurl):
     imgdata = urllib2.urlopen(imgurl).read()
     im = Image(imgdata)
     dimx = im.width
@@ -302,8 +299,24 @@ def fetchpage(year, month, day):
     for startposn in starts:
         startpos.append([startposn[0], startposn[1], startlist[startposn]])
 
-    # Done with image stuff. Now to get the clues.
-    page = urllib2.urlopen(pageurl).read().split('\r\n')
+    return matrix, startpos
+
+def fetchpage(year, month, day):
+    filename = (((year * 100 + month) * 100) + day) * 100000000 + 99951000
+    mainpage = "http://www.thehindu.com/todays-paper/tp-index/?date=" + year.__str__().zfill(4) + "-" + month.__str__().zfill(2) + "-" + day.__str__().zfill(2)
+    logging.info('Main Page: %s', mainpage)
+
+    pageurl = None
+    imgurl = None
+
+    mainpgcontent = urllib2.urlopen(mainpage).read().split('\n')
+    for line in mainpgcontent:
+        if re.search('The Hindu Crossword', line):
+            pageurl = re.search('<a href="([^"]*)"', line).groups()[0] + '?css=print'
+
+    logging.info('Page URL: %s', pageurl)
+
+    page = urllib2.urlopen(pageurl).read().split('\n')
     across = {}
     down = {}
     prevcnum = 0
@@ -313,24 +326,30 @@ def fetchpage(year, month, day):
 
     for line in page:
         if crossienum == None:
-            if re.match('The Hindu Crossword [^0-9]*[0-9][0-9]*', line):
+            if re.search('"detail-title">The Hindu Crossword [0-9][0-9]*<', line):
                 crossienum = int(re.search('The Hindu Crossword [^0-9]*([0-9][0-9]*)', line).groups()[0])
         if author == None:
-            if re.match('^[a-zA-z][a-zA-Z .]*$', line):
-                author = line
-        if re.match('<p>\s*[0-9][0-9]*', line):
-            cnum, clue, chars = re.search('<p>\s*([0-9][0-9]*)\ (.*) (\([0-9,-]*\))', line).groups()
-            cnum = int(cnum)
-            if isacross:
-                if cnum < prevcnum:
-                    isacross = False
+            if re.search('<span class="author">', line):
+                logging.info('Author line: %s', line)
+                author = re.search('">([^<]*)<', line).groups()[0]
+        for subline in line.split('</p>'):
+            if re.search('<p class="body">[0-9]', subline):
+                logging.info('Clue line: %s', subline)
+                cnum, clue, chars = re.search('<p class="body">([0-9][0-9]*)(.*) (\([0-9,-]*\))', subline).groups()
+                cnum = int(cnum)
+                if isacross:
+                    if cnum < prevcnum:
+                        isacross = False
 
-            prevcnum = cnum
-            if isacross:
-                across[cnum] = {'clue': clue, 'chars': chars}
-            else:
-                down[cnum] = {'clue': clue, 'chars': chars}
+                prevcnum = cnum
+                if isacross:
+                    across[cnum] = {'clue': clue, 'chars': chars}
+                else:
+                    down[cnum] = {'clue': clue, 'chars': chars}
+        if re.search('main-image', line):
+            imgurl = re.search('<img src="([^"]*)"', line).groups()[0]
 
+    matrix, startpos = fetchAndProcessImage(imgurl)
     crssie = {}
     crssie['matrix'] = matrix
     crssie['startpos'] = startpos
@@ -340,6 +359,7 @@ def fetchpage(year, month, day):
     crssie['down'] = down
     crssie['date'] = {'year': year, 'month': month, 'day': day}
 
+    logging.info(crssie)
     metadatajson = simplejson.dumps(crssie)
     crssiemetadata = CrossieMetaData(crossienum=crossienum, date=datetime.date(year, month, day), metadata=metadatajson, key_name=crossienum.__str__())
     crssiemetadata.put()
