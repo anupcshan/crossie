@@ -528,7 +528,7 @@ function loadLocalStorageValues(noReload) {
 
     if (! crossienum) {
         crossienum = JSON.parse(localStorage.getItem("currentcrossie")) || null;
-        if (! crossienum) {
+        if (! crossienum && crossielist.list && crossielist.list.length > 0) {
             crossienum = crossielist.list[crossielist.list.length - 1].crossienum;
         }
     }

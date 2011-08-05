@@ -219,11 +219,30 @@ def getpixel(img, x, y):
     y = int(y)
     return img[y][x * 4]
 
+def quantizecolor(color):
+    black = 0
+    gray = 210
+    white = 255
+
+    c0 = abs(color - black)
+    c1 = abs(color - gray)
+    c2 = abs(color - white)
+    if c0 < c1 and c0 < c2:
+        return black
+    elif c1 < c0 and c1 < c2:
+        return gray
+    else:
+        return white
+
 def fetchAndProcessImage(imgurl):
+    logging.info('Image URL: %s', imgurl)
+    imgurl = imgurl.replace('dynamic', 'archive').replace('e.jpg', 'a.jpg')
+    logging.info('Image URL enhanced: %s', imgurl)
     imgdata = urllib2.urlopen(imgurl).read()
     im = Image(imgdata)
     dimx = im.width
     dimy = im.height
+    logging.info('Width: %s, Height: %s', dimx, dimy)
 
     im.vertical_flip()
     im.vertical_flip()
@@ -231,10 +250,31 @@ def fetchAndProcessImage(imgurl):
     test = png.Reader(file=StringIO.StringIO(temporary))
     img = list(test.asRGBA()[2])
 
-    black = 0
-    gray = 210
-    white = 255
     length = 15
+
+    # Confirm the right and bottom boundaries
+    rightmost = 0
+    for x in range(0, dimx):
+        clr = getpixel(img, x, 5)
+        clr = quantizecolor(clr)
+        if clr != 255:
+            rightmost = x
+
+    logging.info('Rightmost non-white pixel %s', rightmost)
+    dimx = rightmost
+
+    bottommost = 0
+    for y in range(0, dimx):
+        clr = getpixel(img, 5, y)
+        clr = quantizecolor(clr)
+        if clr != 255:
+            bottommost = y
+
+    logging.info('Bottommost non-white pixel %s', bottommost)
+    dimy = bottommost
+
+    logging.info('---------------')
+
     boxx = dimx*1.0 / length
     boxy = dimy*1.0 / length
 
@@ -252,15 +292,7 @@ def fetchAndProcessImage(imgurl):
             x = boxx * (i + 0.5) + 0.5
             y = boxy * (j + 0.5) + 0.5
             r = getpixel(img, x, y)
-            c0 = abs(r - black)
-            c1 = abs(r - gray)
-            c2 = abs(r - white)
-            if c0 < c1 and c0 < c2:
-                clr = black
-            elif c1 < c0 and c1 < c2:
-                clr = gray
-            else:
-                clr = white
+            clr = quantizecolor(r)
             if (clr == 255):
                 arr[j][i] = 1
             else:
